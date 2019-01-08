@@ -4,7 +4,7 @@ var config = {
     coinUnitPlaces: 8,
     txMinConfirms: 10,         // corresponds to CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE in FURY
     txCoinbaseMinConfirms: 10, // corresponds to CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW in FURY
-    coinSymbol: 'XCA',
+    coinSymbol: 'FURY',
     openAliasPrefix: "furyd",
     coinName: 'FURY',
     coinUriPrefix: 'FURY:',
