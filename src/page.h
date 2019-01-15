@@ -1720,7 +1720,7 @@ show_ringmembers_hex(string const& tx_hash_str)
                     == false)
                 continue;
 
-            core_storage->get_db().get_output_key(epee::span<const uint64_t>(&in_key.amount, 1),
+            core_storage->get_db().get_output_key(in_key.amount,
                                                   absolute_offsets,
                                                   mixin_outputs);
         }
@@ -2009,7 +2009,7 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
 
             // get mining ouput info
             core_storage->get_db().get_output_key(
-                        epee::span<const uint64_t>(&in_key.amount, 1),
+                        in_key.amount,
                         absolute_offsets,
                         mixin_outputs);
         }
@@ -2524,7 +2524,7 @@ show_my_outputs(string tx_hash_str,
             if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
                 continue;
 
-            core_storage->get_db().get_output_key(epee::span<const uint64_t>(&in_key.amount, 1),
+            core_storage->get_db().get_output_key(in_key.amount,
                                                   absolute_offsets,
                                                   mixin_outputs);
         }
@@ -4687,7 +4687,7 @@ json_transaction(string tx_hash_str)
             if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
                 continue;
 
-            core_storage->get_db().get_output_key(epee::span<const uint64_t>(&in_key.amount, 1),
+            core_storage->get_db().get_output_key(in_key.amount,
                                                   absolute_offsets,
                                                   outputs);
         }
@@ -5922,7 +5922,7 @@ json_version()
             {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
             {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
             {"git_branch_name"     , string {GIT_BRANCH_NAME}},
-            {"monero_version_full" , string {FURY_VERSION_FULL}},
+            {"monero_version_full" , string {MONERO_VERSION_FULL}},
             {"api"                 , ONIONEXPLORER_RPC_VERSION},
             {"blockchain_height"   , core_storage->get_current_blockchain_height()}
     };
@@ -6363,7 +6363,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
             // offsets seems good, so try to get the outputs for the amount and
             // offsets given
-            core_storage->get_db().get_output_key(epee::span<const uint64_t>(&in_key.amount, 1),
+            core_storage->get_db().get_output_key(in_key.amount,
                                                   absolute_offsets,
                                                   outputs);
         }
