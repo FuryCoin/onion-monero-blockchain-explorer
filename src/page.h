@@ -2,14 +2,14 @@
 // Created by mwo on 8/04/16.
 //
 
-#ifndef CROWXMR_PAGE_H
-#define CROWXMR_PAGE_H
+#ifndef CROWFURY_PAGE_H
+#define CROWFURY_PAGE_H
 
 
 
 #include "mstch/mstch.hpp"
 
-#include "monero_headers.h"
+#include "fury_headers.h"
 
 #include "../gen/version.h"
 
@@ -37,7 +37,6 @@
 #include <future>
 
 
-
 #define TMPL_DIR                    "./templates"
 #define TMPL_PARIALS_DIR            TMPL_DIR "/partials"
 #define TMPL_CSS_STYLES             TMPL_DIR "/css/style.css"
@@ -60,6 +59,9 @@
 #define TMPL_MY_CHECKRAWKEYIMGS     TMPL_DIR "/checkrawkeyimgs.html"
 #define TMPL_MY_RAWOUTPUTKEYS       TMPL_DIR "/rawoutputkeys.html"
 #define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
+#define TMPL_SERVICE_NODES          TMPL_DIR "/service_nodes.html"
+#define TMPL_SERVICE_NODE_DETAIL    TMPL_DIR "/service_node_detail.html"
+#define TMPL_QUORUM_STATES          TMPL_DIR "/quorum_states.html"
 
 #define JS_JQUERY   TMPL_DIR "/js/jquery.min.js"
 #define JS_CRC32    TMPL_DIR "/js/crc32.js"
@@ -184,7 +186,7 @@ namespace internal
 }
 }
 
-namespace xmreg
+namespace furyeg
 {
 
 
@@ -207,8 +209,8 @@ struct tx_details
     crypto::hash prefix_hash;
     crypto::public_key pk;
     std::vector<crypto::public_key> additional_pks;
-    uint64_t xmr_inputs;
-    uint64_t xmr_outputs;
+    uint64_t fury_inputs;
+    uint64_t fury_outputs;
     uint64_t num_nonrct_inputs;
     uint64_t fee;
     uint64_t mixin_no;
@@ -236,7 +238,7 @@ struct tx_details
     // key images of inputs
     vector<txin_to_key> input_key_imgs;
 
-    // public keys and xmr amount of outputs
+    // public keys and fury amount of outputs
     vector<pair<txout_to_key, uint64_t>> output_pub_keys;
 
     mstch::map
@@ -250,7 +252,7 @@ struct tx_details
         string fee_micro_str {"N/A"};
         string payed_for_kB_micro_str {""};
 
-        const double& xmr_amount = XMR_AMOUNT(fee);
+        const double fury_amount = FURY_AMOUNT(fee);
 
         // tx size in kB
         double tx_size =  static_cast<double>(size)/1024.0;
@@ -258,30 +260,30 @@ struct tx_details
 
         if (!input_key_imgs.empty())
         {
-            double payed_for_kB = xmr_amount / tx_size;
+            double payed_for_kB = fury_amount / tx_size;
 
             mixin_str        = std::to_string(mixin_no);
-            fee_str          = fmt::format("{:0.6f}", xmr_amount);
-            fee_short_str    = fmt::format("{:0.4f}", xmr_amount);
-            fee_micro_str    = fmt::format("{:04.0f}" , xmr_amount * 1e6);
+            fee_str          = fmt::format("{:0.6f}", fury_amount);
+            fee_short_str    = fmt::format("{:0.4f}", fury_amount);
+            fee_micro_str    = fmt::format("{:04.0f}" , fury_amount * 1e6);
             payed_for_kB_str = fmt::format("{:0.4f}", payed_for_kB);
             payed_for_kB_micro_str = fmt::format("{:04.0f}", payed_for_kB * 1e6);
         }
 
 
         mstch::map txd_map {
-                {"hash"              , pod_to_hex(hash)},
-                {"prefix_hash"       , pod_to_hex(prefix_hash)},
-                {"pub_key"           , pod_to_hex(pk)},
+                {"hash"              , epee::string_tools::pod_to_hex(hash)},
+                {"prefix_hash"       , epee::string_tools::pod_to_hex(prefix_hash)},
+                {"pub_key"           , epee::string_tools::pod_to_hex(pk)},
                 {"tx_fee"            , fee_str},
                 {"tx_fee_short"      , fee_short_str},
                 {"fee_micro"         , fee_micro_str},
                 {"payed_for_kB"      , payed_for_kB_str},
                 {"payed_for_kB_micro", payed_for_kB_micro_str},
-                {"sum_inputs"        , xmr_amount_to_str(xmr_inputs , "{:0.6f}")},
-                {"sum_outputs"       , xmr_amount_to_str(xmr_outputs, "{:0.6f}")},
-                {"sum_inputs_short"  , xmr_amount_to_str(xmr_inputs , "{:0.3f}")},
-                {"sum_outputs_short" , xmr_amount_to_str(xmr_outputs, "{:0.3f}")},
+                {"sum_inputs"        , fury_amount_to_str(fury_inputs , "{:0.6f}")},
+                {"sum_outputs"       , fury_amount_to_str(fury_outputs, "{:0.6f}")},
+                {"sum_inputs_short"  , fury_amount_to_str(fury_inputs , "{:0.3f}")},
+                {"sum_outputs_short" , fury_amount_to_str(fury_outputs, "{:0.3f}")},
                 {"no_inputs"         , static_cast<uint64_t>(input_key_imgs.size())},
                 {"no_outputs"        , static_cast<uint64_t>(output_pub_keys.size())},
                 {"no_nonrct_inputs"  , num_nonrct_inputs},
@@ -291,10 +293,10 @@ struct tx_details
                 {"has_payment_id"    , payment_id  != null_hash},
                 {"has_payment_id8"   , payment_id8 != null_hash8},
                 {"pID"               , string {pID}},
-                {"payment_id"        , pod_to_hex(payment_id)},
+                {"payment_id"        , epee::string_tools::pod_to_hex(payment_id)},
                 {"confirmations"     , no_confirmations},
                 {"extra"             , get_extra_str()},
-                {"payment_id8"       , pod_to_hex(payment_id8)},
+                {"payment_id8"       , epee::string_tools::pod_to_hex(payment_id8)},
                 {"unlock_time"       , unlock_time},
                 {"tx_size"           , fmt::format("{:0.4f}", tx_size)},
                 {"tx_size_short"     , fmt::format("{:0.2f}", tx_size)},
@@ -348,6 +350,12 @@ struct tx_details
     ~tx_details() {};
 };
 
+typedef struct ServiceNodeContext
+{
+    std::string html_context;
+    std::string html_full_context;
+    int         num_entries_on_front_page;
+} QuorumStateContext;
 
 class page
 {
@@ -356,6 +364,8 @@ static const bool FULL_AGE_FORMAT {true};
 
 MicroCore* mcore;
 Blockchain* core_storage;
+ServiceNodeContext snode_context;
+QuorumStateContext quorum_state_context;
 rpccalls rpc;
 
 atomic<time_t> server_timestamp;
@@ -422,7 +432,7 @@ public:
 
 page(MicroCore* _mcore,
      Blockchain* _core_storage,
-     string _deamon_url,
+     string _daemon_url,
      cryptonote::network_type _nettype,
      bool _enable_pusher,
      bool _enable_js,
@@ -441,7 +451,7 @@ page(MicroCore* _mcore,
      string _mainnet_url)
         : mcore {_mcore},
           core_storage {_core_storage},
-          rpc {_deamon_url},
+          rpc {_daemon_url},
           server_timestamp {std::time(nullptr)},
           nettype {_nettype},
           enable_pusher {_enable_pusher},
@@ -466,47 +476,57 @@ page(MicroCore* _mcore,
     testnet = nettype == cryptonote::network_type::TESTNET;
     stagenet = nettype == cryptonote::network_type::STAGENET;
 
+    snode_context                           = {};
+    snode_context.num_entries_on_front_page = 10;
+
+    quorum_state_context                           = {};
+    quorum_state_context.num_entries_on_front_page = 1;
 
     no_of_mempool_tx_of_frontpage = 25;
 
     // read template files for all the pages
     // into template_file map
 
-    template_file["css_styles"]      = xmreg::read(TMPL_CSS_STYLES);
-    template_file["header"]          = xmreg::read(TMPL_HEADER);
+    template_file["css_styles"]      = furyeg::read(TMPL_CSS_STYLES);
+    template_file["header"]          = furyeg::read(TMPL_HEADER);
     template_file["footer"]          = get_footer();
-    template_file["index2"]          = get_full_page(xmreg::read(TMPL_INDEX2));
-    template_file["mempool"]         = xmreg::read(TMPL_MEMPOOL);
-    template_file["altblocks"]       = get_full_page(xmreg::read(TMPL_ALTBLOCKS));
-    template_file["mempool_error"]   = xmreg::read(TMPL_MEMPOOL_ERROR);
+    template_file["index2"]          = get_full_page(furyeg::read(TMPL_INDEX2));
+    template_file["mempool"]         = furyeg::read(TMPL_MEMPOOL);
+    template_file["altblocks"]       = get_full_page(furyeg::read(TMPL_ALTBLOCKS));
+    template_file["mempool_error"]   = furyeg::read(TMPL_MEMPOOL_ERROR);
     template_file["mempool_full"]    = get_full_page(template_file["mempool"]);
-    template_file["block"]           = get_full_page(xmreg::read(TMPL_BLOCK));
-    template_file["tx"]              = get_full_page(xmreg::read(TMPL_TX));
-    template_file["my_outputs"]      = get_full_page(xmreg::read(TMPL_MY_OUTPUTS));
-    template_file["rawtx"]           = get_full_page(xmreg::read(TMPL_MY_RAWTX));
-    template_file["checkrawtx"]      = get_full_page(xmreg::read(TMPL_MY_CHECKRAWTX));
-    template_file["pushrawtx"]       = get_full_page(xmreg::read(TMPL_MY_PUSHRAWTX));
-    template_file["rawkeyimgs"]      = get_full_page(xmreg::read(TMPL_MY_RAWKEYIMGS));
-    template_file["rawoutputkeys"]   = get_full_page(xmreg::read(TMPL_MY_RAWOUTPUTKEYS));
-    template_file["checkrawkeyimgs"] = get_full_page(xmreg::read(TMPL_MY_CHECKRAWKEYIMGS));
-    template_file["checkoutputkeys"] = get_full_page(xmreg::read(TMPL_MY_CHECKRAWOUTPUTKEYS));
-    template_file["address"]         = get_full_page(xmreg::read(TMPL_ADDRESS));
-    template_file["search_results"]  = get_full_page(xmreg::read(TMPL_SEARCH_RESULTS));
-    template_file["tx_details"]      = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
-    template_file["tx_table_header"] = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
-    template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
+    template_file["service_nodes"]   = furyeg::read(TMPL_SERVICE_NODES);
+    template_file["quorum_states"]   = furyeg::read(TMPL_QUORUM_STATES);
+    template_file["quorum_states_full"]  = get_full_page(furyeg::read(TMPL_QUORUM_STATES));
+    template_file["service_nodes_full"]  = get_full_page(furyeg::read(TMPL_SERVICE_NODES));
+    template_file["service_node_detail"] = get_full_page(furyeg::read(TMPL_SERVICE_NODE_DETAIL));
+    template_file["block"]           = get_full_page(furyeg::read(TMPL_BLOCK));
+    template_file["tx"]              = get_full_page(furyeg::read(TMPL_TX));
+    template_file["my_outputs"]      = get_full_page(furyeg::read(TMPL_MY_OUTPUTS));
+    template_file["rawtx"]           = get_full_page(furyeg::read(TMPL_MY_RAWTX));
+    template_file["checkrawtx"]      = get_full_page(furyeg::read(TMPL_MY_CHECKRAWTX));
+    template_file["pushrawtx"]       = get_full_page(furyeg::read(TMPL_MY_PUSHRAWTX));
+    template_file["rawkeyimgs"]      = get_full_page(furyeg::read(TMPL_MY_RAWKEYIMGS));
+    template_file["rawoutputkeys"]   = get_full_page(furyeg::read(TMPL_MY_RAWOUTPUTKEYS));
+    template_file["checkrawkeyimgs"] = get_full_page(furyeg::read(TMPL_MY_CHECKRAWKEYIMGS));
+    template_file["checkoutputkeys"] = get_full_page(furyeg::read(TMPL_MY_CHECKRAWOUTPUTKEYS));
+    template_file["address"]         = get_full_page(furyeg::read(TMPL_ADDRESS));
+    template_file["search_results"]  = get_full_page(furyeg::read(TMPL_SEARCH_RESULTS));
+    template_file["tx_details"]      = furyeg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
+    template_file["tx_table_header"] = furyeg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
+    template_file["tx_table_row"]    = furyeg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
 
     if (enable_js) {
         // JavaScript files
-        template_file["jquery.min.js"]   = xmreg::read(JS_JQUERY);
-        template_file["crc32.js"]        = xmreg::read(JS_CRC32);
-        template_file["crypto.js"]       = xmreg::read(JS_CRYPTO);
-        template_file["cn_util.js"]      = xmreg::read(JS_CNUTIL);
-        template_file["base58.js"]       = xmreg::read(JS_BASE58);
-        template_file["nacl-fast-cn.js"] = xmreg::read(JS_NACLFAST);
-        template_file["sha3.js"]         = xmreg::read(JS_SHA3);
-        template_file["config.js"]       = xmreg::read(JS_CONFIG);
-        template_file["biginteger.js"]   = xmreg::read(JS_BIGINT);
+        template_file["jquery.min.js"]   = furyeg::read(JS_JQUERY);
+        template_file["crc32.js"]        = furyeg::read(JS_CRC32);
+        template_file["crypto.js"]       = furyeg::read(JS_CRYPTO);
+        template_file["cn_util.js"]      = furyeg::read(JS_CNUTIL);
+        template_file["base58.js"]       = furyeg::read(JS_BASE58);
+        template_file["nacl-fast-cn.js"] = furyeg::read(JS_NACLFAST);
+        template_file["sha3.js"]         = furyeg::read(JS_SHA3);
+        template_file["config.js"]       = furyeg::read(JS_CONFIG);
+        template_file["biginteger.js"]   = furyeg::read(JS_BIGINT);
 
         // need to set  "testnet: false," flag to reflect
         // if we are running testnet or mainnet explorer
@@ -556,6 +576,301 @@ page(MicroCore* _mcore,
 
 }
 
+int portions_to_percent(uint64_t portions)
+{
+    int result = (int)(((portions / (double)STAKING_PORTIONS) * 100.0) + 0.5);
+    return result;
+}
+
+time_t calculate_service_node_expiry_timestamp(uint64_t expiry_height)
+{
+    uint64_t curr_height   = core_storage->get_current_blockchain_height();
+
+    int64_t delta_height = expiry_height - curr_height;
+    time_t result = time(nullptr) + (delta_height * DIFFICULTY_TARGET_V2);
+    return result;
+}
+
+void generate_service_node_mapping(mstch::array *array, bool on_homepage, std::vector<COMMAND_RPC_GET_SERVICE_NODES::response::entry *> const *entries)
+{
+    static std::string end_of_queue = "End Of Queue";
+    size_t iterate_count = on_homepage ? snode_context.num_entries_on_front_page : entries->size();
+    iterate_count        = std::min(entries->size(), iterate_count);
+
+    array->reserve(iterate_count);
+
+    static std::string num_contributors_str;
+    num_contributors_str.reserve(8);
+    for (size_t i = 0; i < iterate_count; ++i, num_contributors_str.clear())
+    {
+        COMMAND_RPC_GET_SERVICE_NODES::response::entry const *entry = (*entries)[i];
+        num_contributors_str += std::to_string(entry->contributors.size());
+        num_contributors_str += "/";
+        num_contributors_str += std::to_string(MAX_NUMBER_OF_CONTRIBUTORS);
+
+        uint64_t contribution_remaining = entry->staking_requirement - entry->total_reserved;
+        int operator_cut_in_percent = portions_to_percent(entry->portions_for_operator);
+
+        std::string expiration_time_relative;
+        std::string expiration_time_str = make_service_node_expiry_time_str(entry, &expiration_time_relative);
+
+        mstch::map array_entry
+        {
+          {"public_key",                    entry->service_node_pubkey},
+          {"num_contributors",              num_contributors_str},
+          {"operator_cut",                  operator_cut_in_percent},
+          {"open_for_contribution",         print_money(contribution_remaining)},
+          {"contributed",                   print_money(entry->total_contributed)},
+          {"reserved",                      print_money(entry->total_reserved)},
+          {"staking_requirement",           print_money(entry->staking_requirement)},
+          {"last_reward_at_block",          entry->last_reward_block_height},
+          {"last_reward_at_block_tx_index", (entry->last_reward_transaction_index == UINT32_MAX) ? end_of_queue : std::to_string(entry->last_reward_transaction_index)},
+          {"expiration_date",               expiration_time_str},
+          {"expiration_time_relative",      expiration_time_relative},
+          {"last_uptime_proof",             last_uptime_proof_to_string(entry->last_uptime_proof)},
+        };
+        array->push_back(array_entry);
+    }
+}
+
+std::string
+render_service_nodes_html(bool add_header_and_footer)
+{
+    bool on_homepage = !add_header_and_footer;
+
+    COMMAND_RPC_GET_SERVICE_NODES::response response;
+    if (!rpc.get_service_node(response, {}))
+    {
+      return (on_homepage) ? snode_context.html_context : snode_context.html_full_context;
+    }
+
+    char const active_array_id[]   = "service_node_active_array";
+    char const awaiting_array_id[] = "service_node_awaiting_array";
+
+    mstch::map page_context;
+    page_context.emplace(active_array_id, mstch::array());
+    page_context.emplace(awaiting_array_id, mstch::array());
+
+    // Split and sort the entries
+    std::vector<cryptonote::COMMAND_RPC_GET_SERVICE_NODES::response::entry *> unregistered;
+    std::vector<cryptonote::COMMAND_RPC_GET_SERVICE_NODES::response::entry *> registered;
+    {
+        registered.reserve  (response.service_node_states.size());
+        unregistered.reserve(response.service_node_states.size() * 0.5f);
+
+        for (auto &entry : response.service_node_states)
+        {
+          if (entry.total_contributed == entry.staking_requirement)
+          {
+            registered.push_back(&entry);
+          }
+          else
+          {
+            unregistered.push_back(&entry);
+          }
+        }
+
+        std::sort(unregistered.begin(), unregistered.end(),
+            [](const cryptonote::COMMAND_RPC_GET_SERVICE_NODES::response::entry *a, const cryptonote::COMMAND_RPC_GET_SERVICE_NODES::response::entry *b) {
+            uint64_t a_remaining = a->staking_requirement - a->total_reserved;
+            uint64_t b_remaining = b->staking_requirement - b->total_reserved;
+
+            if (b_remaining == a_remaining)
+              return b->portions_for_operator < a->portions_for_operator;
+
+            return b_remaining < a_remaining;
+        });
+
+        std::stable_sort(registered.begin(), registered.end(),
+            [](const cryptonote::COMMAND_RPC_GET_SERVICE_NODES::response::entry *a, const cryptonote::COMMAND_RPC_GET_SERVICE_NODES::response::entry *b) {
+            if (a->last_reward_block_height == b->last_reward_block_height)
+              return a->last_reward_transaction_index < b->last_reward_transaction_index;
+
+            return a->last_reward_block_height < b->last_reward_block_height;
+        });
+    }
+
+    mstch::array& active_array   = boost::get<mstch::array>(page_context[active_array_id]);
+    mstch::array& awaiting_array = boost::get<mstch::array>(page_context[awaiting_array_id]);
+    generate_service_node_mapping(&awaiting_array, on_homepage, &unregistered);
+    generate_service_node_mapping(&active_array, on_homepage, &registered);
+    page_context["service_node_active_size"]   = (int) registered.size();
+    page_context["service_node_awaiting_size"] = (int) unregistered.size();
+
+    if (on_homepage)
+    {
+      snode_context.html_context = mstch::render(template_file["service_nodes"], page_context);
+      return snode_context.html_context;
+    }
+    else
+    {
+      add_css_style(page_context);
+      snode_context.html_full_context = mstch::render(template_file["service_nodes_full"], page_context);
+      return snode_context.html_full_context;
+    }
+}
+
+std::string last_uptime_proof_to_string(time_t uptime_proof)
+{
+  static std::string friendly_uptime_proof_not_received = "Not Received";
+
+  if (uptime_proof == 0)
+  {
+    return friendly_uptime_proof_not_received;
+  }
+  else
+  {
+    return get_age(server_timestamp, uptime_proof).first;
+  }
+}
+
+using sn_entry_map = std::unordered_map<std::string, COMMAND_RPC_GET_SERVICE_NODES::response::entry>;
+
+static bool service_node_entry_is_infinite_staking(COMMAND_RPC_GET_SERVICE_NODES::response::entry const *entry)
+{
+  bool result = entry->contributors[0].locked_contributions.size() > 0;
+  return result;
+}
+
+std::string make_service_node_expiry_time_str(COMMAND_RPC_GET_SERVICE_NODES::response::entry const *entry, std::string *expiry_time_relative)
+{
+  std::string result;
+  uint64_t expiry_height = 0;
+
+  if (entry->contributors[0].locked_contributions.size() > 0)
+    expiry_height = entry->requested_unlock_height;
+  else
+    expiry_height = entry->registration_height + service_nodes::staking_num_lock_blocks(nettype);
+
+  if (expiry_height > 0)
+  {
+    time_t expiry_time = calculate_service_node_expiry_timestamp(expiry_height);
+    get_human_readable_timestamp(expiry_time, &result);
+    if (expiry_time_relative)
+      *expiry_time_relative = std::string(get_human_time_ago(expiry_time, time(nullptr)));
+  }
+  else
+  {
+    if (expiry_time_relative)
+      *expiry_time_relative = "N/A";
+
+    result = "Staking Infinitely";
+  }
+
+  return result;
+}
+
+void gather_sn_data(const std::vector<std::string>& nodes, const sn_entry_map& sn_map, mstch::array& array)
+{
+    static const std::string failed_entry = "--";
+
+    for (const std::string& pub_key : nodes)
+    {
+        mstch::map array_entry { {"public_key", pub_key}, };
+
+        auto it = sn_map.find(pub_key);
+
+        if (it == sn_map.end())
+        {
+            array_entry.emplace("last_uptime_proof",        failed_entry);
+            array_entry.emplace("expiration_date",          failed_entry);
+            array_entry.emplace("expiration_time_relative", failed_entry);
+        }
+        else
+        {
+            std::string expiration_time_relative;
+            std::string expiration_time_str = make_service_node_expiry_time_str(&it->second, &expiration_time_relative);
+
+            array_entry.emplace("last_uptime_proof",        last_uptime_proof_to_string(it->second.last_uptime_proof));
+            array_entry.emplace("expiration_date",          expiration_time_str);
+            array_entry.emplace("expiration_time_relative", expiration_time_relative);
+        }
+        array.push_back(array_entry);
+    }
+
+}
+
+std::string
+render_quorum_states_html(bool add_header_and_footer)
+{
+    bool on_homepage             = !add_header_and_footer;
+    size_t num_quorums_to_render = 30;
+    if (on_homepage)
+    {
+      num_quorums_to_render = quorum_state_context.num_entries_on_front_page;
+    }
+
+    mstch::map page_context {};
+    page_context["quorum_array"] = mstch::array();
+    mstch::array& quorum_array   = boost::get<mstch::array>(page_context["quorum_array"]);
+    quorum_array.reserve(num_quorums_to_render);
+
+    // NOTE: If we're on the homepage, only display the latest height being
+    // voted for. This is not the latest height of the blockchain due to the
+    // reorg safety buffer.
+    uint64_t block_height = core_storage->get_current_blockchain_height() - 1;
+    if (on_homepage)
+    {
+      if (block_height >= service_nodes::quorum_cop::REORG_SAFETY_BUFFER_IN_BLOCKS)
+        block_height -= service_nodes::quorum_cop::REORG_SAFETY_BUFFER_IN_BLOCKS;
+      else
+        block_height = 0;
+    }
+
+    COMMAND_RPC_GET_QUORUM_STATE_BATCHED::response batched_response = {};
+    rpc.get_quorum_state_batched(batched_response, block_height - num_quorums_to_render, block_height);
+
+    COMMAND_RPC_GET_SERVICE_NODES::response sn_response = {};
+    rpc.get_service_node(sn_response, {});
+
+    sn_entry_map pk2sninfo;
+
+    for (const auto& entry : sn_response.service_node_states)
+    {
+        pk2sninfo.insert({entry.service_node_pubkey, entry});
+    }
+
+    // TODO(doyle): Use std::min as workaround, sigh ... fix off by one pls or something pls.
+    for (int i = 0; i < std::min(num_quorums_to_render, batched_response.quorum_entries.size()); ++i)
+    {
+        const auto& entry = batched_response.quorum_entries[i];
+        const uint64_t height = entry.height;
+
+        mstch::map quorum_part;
+        quorum_part["quorum_height"] = height;
+
+        char const quorum_node_array_id[]       = "quorum_nodes_array";
+        char const nodes_to_test_array_id[]     = "nodes_to_test_array";
+        quorum_part[quorum_node_array_id]       = mstch::array();
+        quorum_part[nodes_to_test_array_id]     = mstch::array();
+
+        quorum_part["quorum_nodes_array_size"]  = entry.quorum_nodes.size();
+        quorum_part["nodes_to_test_array_size"] = entry.nodes_to_test.size();
+
+        mstch::array& quorum_node_array   = boost::get<mstch::array>(quorum_part[quorum_node_array_id]);
+        mstch::array& nodes_to_test_array = boost::get<mstch::array>(quorum_part[nodes_to_test_array_id]);
+        quorum_node_array.reserve(entry.quorum_nodes.size());
+        nodes_to_test_array.reserve(entry.nodes_to_test.size());
+
+        gather_sn_data(entry.quorum_nodes, pk2sninfo, quorum_node_array);
+        gather_sn_data(entry.nodes_to_test, pk2sninfo, nodes_to_test_array);
+
+        quorum_array.push_back(quorum_part);
+    }
+
+    if (on_homepage)
+    {
+        quorum_state_context.html_context = mstch::render(template_file["quorum_states"], page_context);
+        return quorum_state_context.html_context;
+    }
+    else
+    {
+        add_css_style(page_context);
+        quorum_state_context.html_full_context = mstch::render(template_file["quorum_states_full"], page_context);
+        return quorum_state_context.html_full_context;
+    }
+}
+
 /**
  * @brief show recent transactions and mempool
  * @param page_no block page to show
@@ -567,14 +882,14 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
 {
 
     // we get network info, such as current hash rate
-    // but since this makes a rpc call to deamon, we make it as an async
+    // but since this makes a rpc call to daemon, we make it as an async
     // call. this way we dont have to wait with execution of the rest of the
-    // index2 method, until deamon gives as the required result.
+    // index2 method, until daemon gives as the required result.
     std::future<json> network_info_ftr = std::async(std::launch::async, [&]
     {
         json j_info;
 
-        get_monero_network_info(j_info);
+        get_fury_network_info(j_info);
 
         return j_info;
     });
@@ -607,7 +922,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
             {"mainnet_url"              , mainnet_url},
             {"refresh"                  , refresh_page},
             {"height"                   , height},
-            {"server_timestamp"         , xmreg::timestamp_to_str_gm(local_copy_server_timestamp)},
+            {"server_timestamp"         , furyeg::timestamp_to_str_gm(local_copy_server_timestamp)},
             {"age_format"               , string("[h:m:d]")},
             {"page_no"                  , page_no},
             {"total_page_no"            , (height / no_of_last_blocks)},
@@ -870,7 +1185,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     } // while (i <= end_height)
 
     // calculate median size of the blocks shown
-    //double blk_size_median = xmreg::calc_median(blk_sizes.begin(), blk_sizes.end());
+    //double blk_size_median = furyeg::calc_median(blk_sizes.begin(), blk_sizes.end());
 
     // save computational times for disply in the frontend
 
@@ -885,7 +1200,6 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
 
     context["cache_hits"]   = cache_hits;
     context["cache_misses"] = cache_misses;
-
 
     // get current network info from MemoryStatus thread.
     MempoolStatus::network_info current_network_info
@@ -912,19 +1226,21 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     }
 
     context["network_info"] = mstch::map {
-            {"difficulty"        , current_network_info.difficulty},
-            {"hash_rate"         , hash_rate},
-            {"fee_per_kb"        , print_money(current_network_info.fee_per_kb)},
-            {"alt_blocks_no"     , current_network_info.alt_blocks_count},
-            {"have_alt_block"    , (current_network_info.alt_blocks_count > 0)},
-            {"tx_pool_size"      , current_network_info.tx_pool_size},
-            {"block_size_limit"  , string {current_network_info.block_size_limit_str}},
-            {"block_size_median" , string {current_network_info.block_size_median_str}},
-            {"is_current_info"   , current_network_info.current},
-            {"is_pool_size_zero" , (current_network_info.tx_pool_size == 0)},
-            {"current_hf_version", current_network_info.current_hf_version},
-            {"age"               , network_info_age.first},
-            {"age_format"        , network_info_age.second},
+            {"difficulty"         , furyeg::make_comma_sep_number(current_network_info.difficulty)},
+            {"hash_rate"          , hash_rate},
+            {"fee_per_kb"         , print_money(current_network_info.fee_per_kb)},
+            {"alt_blocks_no"      , current_network_info.alt_blocks_count},
+            {"have_alt_block"     , (current_network_info.alt_blocks_count > 0)},
+            {"tx_pool_size"       , current_network_info.tx_pool_size},
+            {"block_size_limit"   , string {current_network_info.block_size_limit_str}},
+            {"block_size_median"  , string {current_network_info.block_size_median_str}},
+            {"is_current_info"    , current_network_info.current},
+            {"is_pool_size_zero"  , (current_network_info.tx_pool_size == 0)},
+            {"current_hf_version" , current_network_info.current_hf_version},
+            {"staking_requirement", print_money(current_network_info.staking_requirement)},
+            {"age"                , network_info_age.first},
+            {"age_format"         , network_info_age.second},
+            {"total_blockchain_size" , string {current_network_info.total_blockchain_size_str}},
     };
 
     // median size of 100 blocks
@@ -952,14 +1268,24 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
                 = CurrentBlockchainStatus::get_emission();
 
         string emission_blk_no   = std::to_string(current_values.blk_no - 1);
-        string emission_coinbase = xmr_amount_to_str(current_values.coinbase, "{:0.3f}");
-        string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.3f}");
+        string emission_coinbase = fury_amount_to_str(current_values.coinbase, "{:0.3f}");
+        string emission_fee      = fury_amount_to_str(current_values.fee, "{:0.3f}");
 
         context["emission"] = mstch::map {
                 {"blk_no"    , emission_blk_no},
                 {"amount"    , emission_coinbase},
-                {"fee_amount", emission_fee}
+                {"fee_amount", emission_fee},
+                {"circulating_supply", furyeg::make_comma_sep_number(CurrentBlockchainStatus::circulating_supply)}
         };
+
+        if (CurrentBlockchainStatus::circulating_supply_calc_from_height + 10 < core_storage->get_current_blockchain_height())
+        {
+          context.emplace("circulating_supply_is_up_to_date", false);
+        }
+        else
+        {
+          context.emplace("circulating_supply_is_up_to_date", true);
+        }
     }
     else
     {
@@ -970,7 +1296,25 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     // get memory pool rendered template
     //string mempool_html = mempool(false, no_of_mempool_tx_of_frontpage);
 
-    // append mempool_html to the index context map
+    // service nodes
+    {
+      std::future<std::string> future = std::async(std::launch::async, [&] { return render_service_nodes_html(false /*add_header_and_footer*/); });
+      std::future_status status = future.wait_for(std::chrono::milliseconds(1000));
+
+      if (status == std::future_status::ready)
+        context["service_node_summary"] = future.get();
+    }
+
+    // quorum states
+    {
+      std::future<std::string> future = std::async(std::launch::async, [&] { return render_quorum_states_html(false /*add_header_and_footer*/); });
+      std::future_status status = future.wait_for(std::chrono::milliseconds(1000));
+
+      if (status == std::future_status::ready)
+        context["quorum_state_summary"] = future.get();
+    }
+
+    // append html files to the index context map
     context["mempool_info"] = mempool_html;
 
     add_css_style(context);
@@ -1066,8 +1410,8 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
                 {"hash"            , pod_to_hex(mempool_tx.tx_hash)},
                 {"fee"             , mempool_tx.fee_micro_str},
                 {"payed_for_kB"    , mempool_tx.payed_for_kB_micro_str},
-                {"xmr_inputs"      , mempool_tx.xmr_inputs_str},
-                {"xmr_outputs"     , mempool_tx.xmr_outputs_str},
+                {"fury_inputs"      , mempool_tx.fury_inputs_str},
+                {"fury_outputs"     , mempool_tx.fury_outputs_str},
                 {"no_inputs"       , mempool_tx.no_inputs},
                 {"no_outputs"      , mempool_tx.no_outputs},
                 {"pID"             , string {mempool_tx.pID}},
@@ -1217,7 +1561,7 @@ show_block(uint64_t _blk_height)
     string blk_hash_str  = pod_to_hex(blk_hash);
 
     // get block timestamp in user friendly format
-    string blk_timestamp = xmreg::timestamp_to_str_gm(blk.timestamp);
+    string blk_timestamp = furyeg::timestamp_to_str_gm(blk.timestamp);
 
     // get age of the block relative to the server time
     pair<string, string> age = get_age(server_timestamp, blk.timestamp);
@@ -1325,7 +1669,7 @@ show_block(uint64_t _blk_height)
 
 
         // get mixins in time scale for visual representation
-        //string mixin_times_scale = xmreg::timestamps_time_scale(mixin_timestamps,
+        //string mixin_times_scale = furyeg::timestamps_time_scale(mixin_timestamps,
         //                                                        server_timestamp);
 
 
@@ -1333,14 +1677,13 @@ show_block(uint64_t _blk_height)
         txs.push_back(txd.get_mstch_map());
     }
 
-
     // add total fees in the block to the context
     context["sum_fees"]
-            = xmreg::xmr_amount_to_str(sum_fees, "{:0.6f}", false);
+            = furyeg::fury_amount_to_str(sum_fees, "{:0.6f}", false);
 
-    // get xmr in the block reward
+    // get fury in the block reward
     context["blk_reward"]
-            = xmreg::xmr_amount_to_str(txd_coinbase.xmr_outputs - sum_fees, "{:0.6f}");
+            = furyeg::fury_amount_to_str(txd_coinbase.fury_outputs - sum_fees, "{:0.6f}");
 
     add_css_style(context);
 
@@ -1348,13 +1691,106 @@ show_block(uint64_t _blk_height)
     return mstch::render(template_file["block"], context);
 }
 
+string
+show_service_node(const std::string &service_node_pubkey)
+{
+    COMMAND_RPC_GET_SERVICE_NODES::response response;
+    if (!rpc.get_service_node(response, {service_node_pubkey}))
+    {
+      cerr << "Failed to rpc with daemon " << service_node_pubkey << endl;
+      return std::string("Failed to rpc with daemon " + service_node_pubkey);
+    }
+
+    if (response.service_node_states.size() != 1)
+    {
+      cerr << "service node state size: " << response.service_node_states.size() << endl;
+      cerr << "Can't get service node pubkey or couldn't find as registered service node: " << service_node_pubkey << endl;
+      return std::string("Can't get service node pubkey or couldn't find as registered service node: " + service_node_pubkey);
+    }
+
+    mstch::map page_context {};
+    COMMAND_RPC_GET_SERVICE_NODES::response::entry const *entry = &response.service_node_states[0];
+
+    // Make metadata render data
+    static std::string friendly_uptime_proof_not_received = "Not Received";
+    int operator_cut_in_percent = portions_to_percent(entry->portions_for_operator);
+
+    page_context["public_key"]           = entry->service_node_pubkey;
+    page_context["last_reward_at_block"] = entry->last_reward_block_height;
+    page_context["last_reward_at_block_tx_index"] = entry->last_reward_transaction_index;
+    page_context["total_contributed"]    = print_money(entry->total_contributed);
+    page_context["total_reserved"]       = print_money(entry->total_reserved);
+    page_context["staking_requirement"]  = print_money(entry->staking_requirement);
+    page_context["operator_cut"]         = operator_cut_in_percent;
+    page_context["operator_address"]     = entry->operator_address;
+    page_context["operator_address"]     = entry->operator_address;
+    page_context["last_uptime_proof"]    = (entry->last_uptime_proof == 0) ? friendly_uptime_proof_not_received : get_age(server_timestamp, entry->last_uptime_proof).first;
+    page_context["num_contributors"]     = (int) entry->contributors.size();
+    page_context["register_height"]      = entry->registration_height;
+
+    // Make contributor render data
+    char const service_node_contributors_array_id[] = "service_node_contributors_array";
+    page_context.emplace(service_node_contributors_array_id, mstch::array{});
+    mstch::array& contributors = boost::get<mstch::array>(page_context[service_node_contributors_array_id]);
+    for (COMMAND_RPC_GET_SERVICE_NODES::response::contributor const &contributor : entry->contributors)
+    {
+      mstch::map array_entry
+      {
+        {"address",  contributor.address},
+        {"amount",   print_money(contributor.amount)},
+        {"reserved", print_money(contributor.reserved)},
+      };
+
+      contributors.push_back(array_entry);
+    }
+
+    char const service_node_registered_text_id[] = "service_node_registered_text";
+    if (entry->total_contributed == entry->staking_requirement)
+    {
+      bool node_scheduled_for_expiry = true;
+      if (service_node_entry_is_infinite_staking(entry))
+        node_scheduled_for_expiry = (entry->requested_unlock_height > 0);
+
+      std::string str = "This service node is registered and active on the network. ";
+      if (node_scheduled_for_expiry)
+      {
+        std::string expiry_time_relative;
+        std::string expiry_time_str = make_service_node_expiry_time_str(entry, &expiry_time_relative);
+        str += "It is scheduled to expire on the ";
+        str += expiry_time_str;
+        str += " or ";
+        str += expiry_time_relative;
+      }
+      else
+      {
+        str += "The service node is staking infinitely, no unlock has been requested yet.";
+      }
+
+      page_context[service_node_registered_text_id] = str;
+    }
+    else
+    {
+      char buf[192];
+      buf[0] = 0;
+      uint64_t remaining_contribution = entry->staking_requirement - entry->total_reserved;
+
+      snprintf(buf, sizeof(buf),
+          "This service node is awaiting to be registered and has: %s fury to be contributed remaining",
+          print_money(remaining_contribution).c_str());
+
+      page_context[service_node_registered_text_id] = std::string(buf);
+    }
+
+    add_css_style(page_context);
+    return mstch::render(template_file["service_node_detail"], page_context);
+}
 
 string
 show_block(string _blk_hash)
 {
     crypto::hash blk_hash;
 
-    if (!xmreg::parse_str_secret_key(_blk_hash, blk_hash))
+    if (!furyeg::parse_str_secret_key(_blk_hash, blk_hash))
     {
         cerr << "Cant parse blk hash: " << blk_hash << endl;
         return fmt::format("Cant get block {:s} due to block hash parse error!", blk_hash);
@@ -1382,7 +1818,7 @@ show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0)
     // parse tx hash string to hash object
     crypto::hash tx_hash;
 
-    if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+    if (!furyeg::parse_str_secret_key(tx_hash_str, tx_hash))
     {
         cerr << "Cant parse tx hash: " << tx_hash_str << endl;
         return string("Cant get tx hash due to parse error: " + tx_hash_str);
@@ -1418,7 +1854,7 @@ show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0)
             uint64_t tx_recieve_timestamp
                     = found_txs.at(0).receive_time;
 
-            blk_timestamp = xmreg::timestamp_to_str_gm(tx_recieve_timestamp);
+            blk_timestamp = furyeg::timestamp_to_str_gm(tx_recieve_timestamp);
 
             age = get_age(server_timestamp, tx_recieve_timestamp,
                           FULL_AGE_FORMAT);
@@ -1692,7 +2128,7 @@ show_ringmembers_hex(string const& tx_hash_str)
     if (!get_tx(tx_hash_str, tx, tx_hash))
         return string {"Cant get tx: "} +  tx_hash_str;
 
-    vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
+    vector<txin_to_key> input_key_imgs = furyeg::get_key_images(tx);
 
     // key: vector of absolute_offsets and associated amount (last value),
     // value: vector of output_info_of_mixins
@@ -1720,7 +2156,7 @@ show_ringmembers_hex(string const& tx_hash_str)
                     == false)
                 continue;
 
-            core_storage->get_db().get_output_key(in_key.amount,
+            core_storage->get_db().get_output_key(epee::span<const uint64_t>(&in_key.amount, 1),
                                                   absolute_offsets,
                                                   mixin_outputs);
         }
@@ -1761,7 +2197,7 @@ show_ringmemberstx_hex(string const& tx_hash_str)
     if (!get_tx(tx_hash_str, tx, tx_hash))
         return string {"Cant get tx: "} +  tx_hash_str;
 
-    vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
+    vector<txin_to_key> input_key_imgs = furyeg::get_key_images(tx);
 
     // key: constracted from concatenation of in_key.amount and absolute_offsets,
     // value: vector of string where string is transaction hash + output index + tx_hex
@@ -1864,7 +2300,7 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
     if (!get_tx(tx_hash_str, tx, tx_hash))
         return string {"Cant get tx: "} +  tx_hash_str;
 
-    vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
+    vector<txin_to_key> input_key_imgs = furyeg::get_key_images(tx);
 
     json tx_json;
 
@@ -2009,7 +2445,7 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
 
             // get mining ouput info
             core_storage->get_db().get_output_key(
-                        in_key.amount,
+                        epee::span<const uint64_t>(&in_key.amount, 1),
                         absolute_offsets,
                         mixin_outputs);
         }
@@ -2090,7 +2526,7 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
 
 string
 show_my_outputs(string tx_hash_str,
-                string xmr_address_str,
+                string fury_address_str,
                 string viewkey_str, /* or tx_prv_key_str when tx_prove == true */
                 string raw_tx_data,
                 string domain,
@@ -2099,7 +2535,7 @@ show_my_outputs(string tx_hash_str,
 
     // remove white characters
     boost::trim(tx_hash_str);
-    boost::trim(xmr_address_str);
+    boost::trim(fury_address_str);
     boost::trim(viewkey_str);
     boost::trim(raw_tx_data);
 
@@ -2108,9 +2544,9 @@ show_my_outputs(string tx_hash_str,
         return string("tx hash not provided!");
     }
 
-    if (xmr_address_str.empty())
+    if (fury_address_str.empty())
     {
-        return string("Monero address not provided!");
+        return string("Fury address not provided!");
     }
 
     if (viewkey_str.empty())
@@ -2124,19 +2560,19 @@ show_my_outputs(string tx_hash_str,
     // parse tx hash string to hash object
     crypto::hash tx_hash;
 
-    if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+    if (!furyeg::parse_str_secret_key(tx_hash_str, tx_hash))
     {
         cerr << "Cant parse tx hash: " << tx_hash_str << endl;
         return string("Cant get tx hash due to parse error: " + tx_hash_str);
     }
 
-    // parse string representing given monero address
+    // parse string representing given fury address
     cryptonote::address_parse_info address_info;
 
-    if (!xmreg::parse_str_address(xmr_address_str,  address_info, nettype))
+    if (!furyeg::parse_str_address(fury_address_str,  address_info, nettype))
     {
-        cerr << "Cant parse string address: " << xmr_address_str << endl;
-        return string("Cant parse xmr address: " + xmr_address_str);
+        cerr << "Cant parse string address: " << fury_address_str << endl;
+        return string("Cant parse Fury address: " + fury_address_str);
     }
 
     // parse string representing given private key
@@ -2144,7 +2580,7 @@ show_my_outputs(string tx_hash_str,
 
     std::vector<crypto::secret_key> multiple_tx_secret_keys;
 
-    if (!xmreg::parse_str_secret_key(viewkey_str, multiple_tx_secret_keys))
+    if (!furyeg::parse_str_secret_key(viewkey_str, multiple_tx_secret_keys))
     {
         cerr << "Cant parse the private key: " << viewkey_str << endl;
         return string("Cant parse private key: " + viewkey_str);
@@ -2167,7 +2603,7 @@ show_my_outputs(string tx_hash_str,
 //        string spend_key_str("643fedcb8dca1f3b406b84575ecfa94ba01257d56f20d55e8535385503dacc08");
 //
 //        crypto::secret_key prv_spend_key;
-//        if (!xmreg::parse_str_secret_key(spend_key_str, prv_spend_key))
+//        if (!furyeg::parse_str_secret_key(spend_key_str, prv_spend_key))
 //        {
 //            cerr << "Cant parse the prv_spend_key : " << spend_key_str << endl;
 //            return string("Cant parse prv_spend_key : " + spend_key_str);
@@ -2234,7 +2670,7 @@ show_my_outputs(string tx_hash_str,
             uint64_t tx_recieve_timestamp
                     = found_txs.at(0).receive_time;
 
-            blk_timestamp = xmreg::timestamp_to_str_gm(tx_recieve_timestamp);
+            blk_timestamp = furyeg::timestamp_to_str_gm(tx_recieve_timestamp);
 
             age = get_age(server_timestamp,
                           tx_recieve_timestamp,
@@ -2279,7 +2715,7 @@ show_my_outputs(string tx_hash_str,
         // calculate difference between tx and server timestamps
         age = get_age(server_timestamp, blk.timestamp, FULL_AGE_FORMAT);
 
-        blk_timestamp = xmreg::timestamp_to_str_gm(blk.timestamp);
+        blk_timestamp = furyeg::timestamp_to_str_gm(blk.timestamp);
 
         tx_blk_height_str = std::to_string(tx_blk_height);
     }
@@ -2291,7 +2727,7 @@ show_my_outputs(string tx_hash_str,
     string shortcut_url = domain
                           + (tx_prove ? "/prove" : "/myoutputs")
                           + '/' + tx_hash_str
-                          + '/' + xmr_address_str
+                          + '/' + fury_address_str
                           + '/' + viewkey_str;
 
 
@@ -2307,13 +2743,13 @@ show_my_outputs(string tx_hash_str,
             {"stagenet"             , stagenet},
             {"tx_hash"              , tx_hash_str},
             {"tx_prefix_hash"       , pod_to_hex(txd.prefix_hash)},
-            {"xmr_address"          , xmr_address_str},
+            {"fury_address"          , fury_address_str},
             {"viewkey"              , viewkey_str_partial},
             {"tx_pub_key"           , pod_to_hex(txd.pk)},
             {"blk_height"           , tx_blk_height_str},
             {"tx_size"              , fmt::format("{:0.4f}",
                                                   static_cast<double>(txd.size) / 1024.0)},
-            {"tx_fee"               , xmreg::xmr_amount_to_str(txd.fee, "{:0.12f}", true)},
+            {"tx_fee"               , furyeg::fury_amount_to_str(txd.fee, "{:0.9f}", true)},
             {"blk_timestamp"        , blk_timestamp},
             {"delta_time"           , age.first},
             {"outputs_no"           , static_cast<uint64_t>(txd.output_pub_keys.size())},
@@ -2326,7 +2762,7 @@ show_my_outputs(string tx_hash_str,
             {"shortcut_url"         , shortcut_url}
     };
 
-    string server_time_str = xmreg::timestamp_to_str_gm(server_timestamp, "%F");
+    string server_time_str = furyeg::timestamp_to_str_gm(server_timestamp, "%F");
 
 
 
@@ -2385,7 +2821,7 @@ show_my_outputs(string tx_hash_str,
 
     mstch::array outputs;
 
-    uint64_t sum_xmr {0};
+    uint64_t sum_fury {0};
 
     std::vector<uint64_t> money_transfered(tx.vout.size(), 0);
 
@@ -2398,7 +2834,7 @@ show_my_outputs(string tx_hash_str,
 
         // get the tx output public key
         // that normally would be generated for us,
-        // if someone had sent us some xmr.
+        // if someone had sent us some fury.
         public_key tx_pubkey;
 
         derive_public_key(derivation,
@@ -2465,12 +2901,12 @@ show_my_outputs(string tx_hash_str,
 
         if (mine_output)
         {
-            sum_xmr += outp.second;
+            sum_fury += outp.second;
         }
 
         outputs.push_back(mstch::map {
                 {"out_pub_key"           , pod_to_hex(outp.first.key)},
-                {"amount"                , xmreg::xmr_amount_to_str(outp.second)},
+                {"amount"                , furyeg::fury_amount_to_str(outp.second)},
                 {"mine_output"           , mine_output},
                 {"output_idx"            , fmt::format("{:02d}", output_idx)}
         });
@@ -2488,18 +2924,18 @@ show_my_outputs(string tx_hash_str,
 
     mstch::array inputs;
 
-    vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
+    vector<txin_to_key> input_key_imgs = furyeg::get_key_images(tx);
 
-    // to hold sum of xmr in matched mixins, those that
+    // to hold sum of fury in matched mixins, those that
     // perfectly match mixin public key with outputs in mixn_tx.
-    uint64_t sum_mixin_xmr {0};
+    uint64_t sum_mixin_fury {0};
 
     // this is used for the final check. we assument that number of
     // parefct matches must be equal to number of inputs in a tx.
     uint64_t no_of_matched_mixins {0};
 
     // Hold all possible mixins that we found. This is only used so that
-    // we get number of all posibilities, and their total xmr amount
+    // we get number of all posibilities, and their total fury amount
     // (useful for unit testing)
     //                     public_key    , amount
     std::vector<std::pair<crypto::public_key, uint64_t>> all_possible_mixins;
@@ -2524,7 +2960,7 @@ show_my_outputs(string tx_hash_str,
             if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
                 continue;
 
-            core_storage->get_db().get_output_key(in_key.amount,
+            core_storage->get_db().get_output_key(epee::span<const uint64_t>(&in_key.amount, 1),
                                                   absolute_offsets,
                                                   mixin_outputs);
         }
@@ -2536,7 +2972,7 @@ show_my_outputs(string tx_hash_str,
 
         inputs.push_back(mstch::map{
                 {"key_image"       , pod_to_hex(in_key.k_image)},
-                {"key_image_amount", xmreg::xmr_amount_to_str(in_key.amount)},
+                {"key_image_amount", furyeg::fury_amount_to_str(in_key.amount)},
                 make_pair(string("mixins"), mstch::array{})
         });
 
@@ -2624,7 +3060,7 @@ show_my_outputs(string tx_hash_str,
             bool found_something {false};
 
             public_key mixin_tx_pub_key
-                    = xmreg::get_tx_pub_key_from_received_outs(mixin_tx);
+                    = furyeg::get_tx_pub_key_from_received_outs(mixin_tx);
 
             std::vector<public_key> mixin_additional_tx_pub_keys
                     = cryptonote::get_additional_tx_pub_keys_from_extra(mixin_tx);
@@ -2664,7 +3100,7 @@ show_my_outputs(string tx_hash_str,
             //          <public_key  , amount  , out idx>
             vector<tuple<txout_to_key, uint64_t, uint64_t>> output_pub_keys;
 
-            output_pub_keys = xmreg::get_ouputs_tuple(mixin_tx);
+            output_pub_keys = furyeg::get_ouputs_tuple(mixin_tx);
 
             mixin_outputs.push_back(mstch::map{
                     {"mix_tx_hash"      , mixin_tx_hash_str},
@@ -2705,7 +3141,7 @@ show_my_outputs(string tx_hash_str,
 
                 // get the tx output public key
                 // that normally would be generated for us,
-                // if someone had sent us some xmr.
+                // if someone had sent us some fury.
                 public_key tx_pubkey_generated;
 
                 derive_public_key(derivation,
@@ -2776,7 +3212,7 @@ show_my_outputs(string tx_hash_str,
                         {"out_idx"         , output_idx_in_tx},
                         {"formed_output_pk", out_pub_key_str},
                         {"out_in_match"    , output_match},
-                        {"amount"          , xmreg::xmr_amount_to_str(amount)}
+                        {"amount"          , furyeg::fury_amount_to_str(amount)}
                 });
 
                 //cout << "txout_k.key == output_data.pubkey" << endl;
@@ -2786,7 +3222,7 @@ show_my_outputs(string tx_hash_str,
                     found_something = true;
                     show_key_images = true;                   
 
-                    // increase sum_mixin_xmr only when
+                    // increase sum_mixin_fury only when
                     // public key of an outputs used in ring signature,
                     // matches a public key in a mixin_tx
                     if (txout_k.key != output_data.pubkey)
@@ -2803,11 +3239,11 @@ show_my_outputs(string tx_hash_str,
                         // in amounts, not only in output public keys
                         if (mixin_tx.version < 2 && amount == in_key.amount)
                         {
-                            sum_mixin_xmr += amount;
+                            sum_mixin_fury += amount;
                         }
                         else if (mixin_tx.version == 2) // ringct
                         {
-                            sum_mixin_xmr += amount;
+                            sum_mixin_fury += amount;
                             ringct_amount += amount;
                         }
 
@@ -2819,7 +3255,7 @@ show_my_outputs(string tx_hash_str,
                     // just to see how would having spend keys worked
 //                        crypto::key_image key_img;
 //
-//                        if (!xmreg::generate_key_image(derivation,
+//                        if (!furyeg::generate_key_image(derivation,
 //                                                       output_idx_in_tx, /* position in the tx */
 //                                                       prv_spend_key,
 //                                                       address.m_spend_public_key,
@@ -2860,22 +3296,21 @@ show_my_outputs(string tx_hash_str,
 
     context.emplace("outputs", outputs);
 
-    context["found_our_outputs"] = (sum_xmr > 0);
-    context["sum_xmr"]           = xmreg::xmr_amount_to_str(sum_xmr);
+    context["found_our_outputs"] = (sum_fury > 0);
+    context["sum_fury"]           = furyeg::fury_amount_to_str(sum_fury);
 
     context.emplace("inputs", inputs);
 
     context["show_inputs"]   = show_key_images;
     context["inputs_no"]     = static_cast<uint64_t>(inputs.size());
-    context["sum_mixin_xmr"] = xmreg::xmr_amount_to_str(
-            sum_mixin_xmr, "{:0.12f}", false);
+    context["sum_mixin_fury"] = furyeg::fury_amount_to_str(sum_mixin_fury, "{:0.9f}", false);
 
 
     uint64_t possible_spending  {0};
 
     //cout << "\nall_possible_mixins: " << all_possible_mixins.size() << '\n';
 
-    // useful for unit testing as it provides total xmr sum
+    // useful for unit testing as it provides total fury sum
     // of possible mixins
     uint64_t all_possible_mixins_amount1  {0};
 
@@ -2893,15 +3328,15 @@ show_my_outputs(string tx_hash_str,
     // show spending only if sum of mixins is more than
     // what we get + fee, and number of perferctly matched
     // mixis is equal to number of inputs
-    if (sum_mixin_xmr > (sum_xmr + txd.fee)
+    if (sum_mixin_fury > (sum_fury + txd.fee)
         && no_of_matched_mixins == inputs.size())
     {
         //                  (outcoming    - incoming) - fee
-        possible_spending = (sum_mixin_xmr - sum_xmr) - txd.fee;
+        possible_spending = (sum_mixin_fury - sum_fury) - txd.fee;
     }
 
-    context["possible_spending"] = xmreg::xmr_amount_to_str(
-            possible_spending, "{:0.12f}", false);
+    context["possible_spending"] = furyeg::fury_amount_to_str(
+            possible_spending, "{:0.9f}", false);
 
     add_css_style(context);
 
@@ -2911,13 +3346,13 @@ show_my_outputs(string tx_hash_str,
 
 string
 show_prove(string tx_hash_str,
-           string xmr_address_str,
+           string fury_address_str,
            string tx_prv_key_str,
            string const& raw_tx_data,
            string domain)
 {
 
-    return show_my_outputs(tx_hash_str, xmr_address_str,
+    return show_my_outputs(tx_hash_str, fury_address_str,
                            tx_prv_key_str, raw_tx_data,
                            domain, true);
 }
@@ -2949,7 +3384,7 @@ show_checkrawtx(string raw_tx_data, string action)
 
     const size_t magiclen = strlen(UNSIGNED_TX_PREFIX);
 
-    string data_prefix = xmreg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
+    string data_prefix = furyeg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
 
     bool unsigned_tx_given {false};
 
@@ -3022,8 +3457,8 @@ show_checkrawtx(string raw_tx_data, string action)
 
                 mstch::map tx_cd_data {
                         {"no_of_sources"      , static_cast<uint64_t>(no_of_sources)},
-                        {"use_rct"            , tx_cd.use_rct},
-                        {"change_amount"      , xmreg::xmr_amount_to_str(tx_change.amount)},
+                        {"use_rct"            , tx_cd.v2_use_rct},
+                        {"change_amount"      , furyeg::fury_amount_to_str(tx_change.amount)},
                         {"has_payment_id"     , (payment_id  != null_hash)},
                         {"has_payment_id8"    , (payment_id8 != null_hash8)},
                         {"payment_id"         , pid_str},
@@ -3040,7 +3475,7 @@ show_checkrawtx(string raw_tx_data, string action)
                     mstch::map dest_info {
                             {"dest_address"  , get_account_address_as_str(
                                     nettype, a_dest.is_subaddress, a_dest.addr)},
-                            {"dest_amount"   , xmreg::xmr_amount_to_str(a_dest.amount)}
+                            {"dest_amount"   , furyeg::fury_amount_to_str(a_dest.amount)}
                     };
 
                     dest_infos.push_back(dest_info);
@@ -3057,7 +3492,7 @@ show_checkrawtx(string raw_tx_data, string action)
                     const tx_source_entry&  tx_source = tx_cd.sources.at(i);
 
                     mstch::map single_dest_source {
-                            {"output_amount"              , xmreg::xmr_amount_to_str(tx_source.amount)},
+                            {"output_amount"              , furyeg::fury_amount_to_str(tx_source.amount)},
                             {"real_output"                , static_cast<uint64_t>(tx_source.real_output)},
                             {"real_out_tx_key"            , pod_to_hex(tx_source.real_out_tx_key)},
                             {"real_output_in_tx_index"    , static_cast<uint64_t>(tx_source.real_output_in_tx_index)},
@@ -3199,7 +3634,7 @@ show_checkrawtx(string raw_tx_data, string action)
                 } //  for (size_t i = 0; i < no_of_sources; ++i)
 
                 tx_cd_data.insert({"sum_outputs_amounts" ,
-                                   xmreg::xmr_amount_to_str(sum_outputs_amounts)});
+                                   furyeg::fury_amount_to_str(sum_outputs_amounts)});
 
 
                 uint64_t min_mix_timestamp;
@@ -3213,8 +3648,8 @@ show_checkrawtx(string raw_tx_data, string action)
                         );
 
                 tx_cd_data.emplace("timescales", mixins_timescales.first);
-                tx_cd_data["min_mix_time"]     = xmreg::timestamp_to_str_gm(min_mix_timestamp);
-                tx_cd_data["max_mix_time"]     = xmreg::timestamp_to_str_gm(max_mix_timestamp);
+                tx_cd_data["min_mix_time"]     = furyeg::timestamp_to_str_gm(min_mix_timestamp);
+                tx_cd_data["max_mix_time"]     = furyeg::timestamp_to_str_gm(max_mix_timestamp);
                 tx_cd_data["timescales_scale"] = fmt::format("{:0.2f}",
                                                              mixins_timescales.second
                                                              / 3600.0 / 24.0); // in days
@@ -3239,7 +3674,7 @@ show_checkrawtx(string raw_tx_data, string action)
 
         const size_t magiclen = strlen(SIGNED_TX_PREFIX);
 
-        string data_prefix = xmreg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
+        string data_prefix = furyeg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
 
         if (strncmp(decoded_raw_tx_data.c_str(), SIGNED_TX_PREFIX, magiclen) != 0)
         {
@@ -3376,7 +3811,7 @@ show_checkrawtx(string raw_tx_data, string action)
 
             mstch::array destination_addresses;
             vector<uint64_t> real_ammounts;
-            uint64_t outputs_xmr_sum {0};
+            uint64_t outputs_fury_sum {0};
 
             // destiantion address for this tx
             for (tx_destination_entry& a_dest: ptx.construction_data.splitted_dsts)
@@ -3389,12 +3824,12 @@ show_checkrawtx(string raw_tx_data, string action)
                         mstch::map {
                                 {"dest_address"   , get_account_address_as_str(
                                         nettype, a_dest.is_subaddress, a_dest.addr)},
-                                {"dest_amount"    , xmreg::xmr_amount_to_str(a_dest.amount)},
+                                {"dest_amount"    , furyeg::fury_amount_to_str(a_dest.amount)},
                                 {"is_this_change" , false}
                         }
                 );
 
-                outputs_xmr_sum += a_dest.amount;
+                outputs_fury_sum += a_dest.amount;
 
                 real_ammounts.push_back(a_dest.amount);
             }
@@ -3407,7 +3842,7 @@ show_checkrawtx(string raw_tx_data, string action)
                                 {"dest_address"   , get_account_address_as_str(
                                         nettype, ptx.construction_data.change_dts.is_subaddress, ptx.construction_data.change_dts.addr)},
                                 {"dest_amount"    ,
-                                        xmreg::xmr_amount_to_str(ptx.construction_data.change_dts.amount)},
+                                        furyeg::fury_amount_to_str(ptx.construction_data.change_dts.amount)},
                                 {"is_this_change" , true}
                         }
                 );
@@ -3415,7 +3850,7 @@ show_checkrawtx(string raw_tx_data, string action)
                 real_ammounts.push_back(ptx.construction_data.change_dts.amount);
             };
 
-            tx_context["outputs_xmr_sum"] = xmreg::xmr_amount_to_str(outputs_xmr_sum);
+            tx_context["outputs_fury_sum"] = furyeg::fury_amount_to_str(outputs_fury_sum);
 
             tx_context.insert({"dest_infos", destination_addresses});
 
@@ -3433,13 +3868,13 @@ show_checkrawtx(string raw_tx_data, string action)
                 //cout << boost::get<string>(output_map["out_pub_key"])
                 //    <<", " <<  out_amount_str << endl;
 
-                uint64_t output_amount;
+               uint64_t output_amount;
 
                 if (parse_amount(output_amount, out_amount_str))
                 {
                     if (output_amount == 0)
                     {
-                        out_amount_str = xmreg::xmr_amount_to_str(real_ammounts.at(i));
+                        out_amount_str = furyeg::fury_amount_to_str(real_ammounts.at(i));
                     }
                 }
             }
@@ -3449,7 +3884,7 @@ show_checkrawtx(string raw_tx_data, string action)
             vector<uint64_t> real_output_indices;
             vector<uint64_t> real_amounts;
 
-            uint64_t inputs_xmr_sum {0};
+            uint64_t inputs_fury_sum {0};
 
             for (const tx_source_entry&  tx_source: ptx.construction_data.sources)
             {
@@ -3498,14 +3933,14 @@ show_checkrawtx(string raw_tx_data, string action)
                 real_output_indices.push_back(tx_source.real_output);
                 real_amounts.push_back(tx_source.amount);
 
-                inputs_xmr_sum += tx_source.amount;
+                inputs_fury_sum += tx_source.amount;
             }
 
             // mark that we have signed tx data for use in mstch
             tx_context["have_raw_tx"] = true;
 
-            // provide total mount of inputs xmr
-            tx_context["inputs_xmr_sum"] = xmreg::xmr_amount_to_str(inputs_xmr_sum);
+            // provide total mount of inputs fury
+            tx_context["inputs_fury_sum"] = furyeg::fury_amount_to_str(inputs_fury_sum);
 
             // get reference to inputs array created of the tx
             mstch::array& inputs = boost::get<mstch::array>(tx_context["inputs"]);
@@ -3523,7 +3958,7 @@ show_checkrawtx(string raw_tx_data, string action)
                         boost::get<mstch::map>(input_node)["amount"]
                 );
 
-                amount = xmreg::xmr_amount_to_str(real_amounts.at(input_idx));
+                amount = furyeg::fury_amount_to_str(real_amounts.at(input_idx));
 
                 // check if key images are spend or not
 
@@ -3611,14 +4046,14 @@ show_pushrawtx(string raw_tx_data, string action)
         ptx_vector.push_back({});
         ptx_vector.back().tx = parsed_tx;
     }
-    // if failed, treat raw_tx_data as base64 encoding of signed_monero_tx
+    // if failed, treat raw_tx_data as base64 encoding of signed_fury_tx
     else
     {
         string decoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
 
         const size_t magiclen = strlen(SIGNED_TX_PREFIX);
 
-        string data_prefix = xmreg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
+        string data_prefix = furyeg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
 
         context["data_prefix"] = data_prefix;
 
@@ -3853,7 +4288,7 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
         return mstch::render(full_page, context);
     }
 
-    if (!xmreg::parse_str_secret_key(viewkey_str, prv_view_key))
+    if (!furyeg::parse_str_secret_key(viewkey_str, prv_view_key))
     {
         string error_msg = fmt::format("Cant parse the private key: " + viewkey_str);
 
@@ -3865,7 +4300,7 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
 
     const size_t magiclen = strlen(KEY_IMAGE_EXPORT_FILE_MAGIC);
 
-    string data_prefix = xmreg::make_printable(decoded_raw_data.substr(0, magiclen));
+    string data_prefix = furyeg::make_printable(decoded_raw_data.substr(0, magiclen));
 
     context["data_prefix"] = data_prefix;
 
@@ -3880,7 +4315,7 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
     }
 
     // decrypt key images data using private view key
-    decoded_raw_data = xmreg::decrypt(
+    decoded_raw_data = furyeg::decrypt(
             std::string(decoded_raw_data, magiclen),
             prv_view_key, true);
 
@@ -3912,20 +4347,20 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
 
     }
 
-    // get xmr address stored in this key image file
-    const account_public_address* xmr_address =
+    // get fury address stored in this key image file
+    const account_public_address* fury_address =
             reinterpret_cast<const account_public_address*>(
                     decoded_raw_data.data());
 
-    address_parse_info address_info {*xmr_address, false};
+    address_parse_info address_info {*fury_address, false};
 
 
     context.insert({"address"        , REMOVE_HASH_BRAKETS(
-            xmreg::print_address(address_info, nettype))});
+            furyeg::print_address(address_info, nettype))});
     context.insert({"viewkey"        , REMOVE_HASH_BRAKETS(
             fmt::format("{:s}", prv_view_key))});
-    context.insert({"has_total_xmr"  , false});
-    context.insert({"total_xmr"      , string{}});
+    context.insert({"has_total_fury"  , false});
+    context.insert({"total_fury"      , string{}});
     context.insert({"key_imgs"       , mstch::array{}});
 
 
@@ -3949,7 +4384,7 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
                 {"key_no"              , fmt::format("{:03d}", n)},
                 {"key_image"           , pod_to_hex(key_image)},
                 {"signature"           , fmt::format("{:s}", signature)},
-                {"address"             , xmreg::print_address(
+                {"address"             , furyeg::print_address(
                                             address_info, nettype)},
                 {"is_spent"            , core_storage->have_tx_keyimg_as_spent(key_image)},
                 {"tx_hash"             , string{}}
@@ -3999,7 +4434,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
         return mstch::render(full_page, context);
     }
 
-    if (!xmreg::parse_str_secret_key(viewkey_str, prv_view_key))
+    if (!furyeg::parse_str_secret_key(viewkey_str, prv_view_key))
     {
         string error_msg = fmt::format("Cant parse the private key: " + viewkey_str);
 
@@ -4011,7 +4446,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
 
     const size_t magiclen = strlen(OUTPUT_EXPORT_FILE_MAGIC);
 
-    string data_prefix = xmreg::make_printable(decoded_raw_data.substr(0, magiclen));
+    string data_prefix = furyeg::make_printable(decoded_raw_data.substr(0, magiclen));
 
     context["data_prefix"] = data_prefix;
 
@@ -4027,7 +4462,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
 
 
     // decrypt key images data using private view key
-    decoded_raw_data = xmreg::decrypt(
+    decoded_raw_data = furyeg::decrypt(
             std::string(decoded_raw_data, magiclen),
             prv_view_key, true);
 
@@ -4047,18 +4482,18 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
     // header is public spend and keys
     const size_t header_lenght    = 2 * sizeof(crypto::public_key);
 
-    // get xmr address stored in this key image file
-    const account_public_address* xmr_address =
+    // get fury address stored in this key image file
+    const account_public_address* fury_address =
             reinterpret_cast<const account_public_address*>(
                     decoded_raw_data.data());
 
-    address_parse_info address_info {*xmr_address, false, false, crypto::null_hash8};
+    address_parse_info address_info {*fury_address, false, false, crypto::null_hash8};
 
     context.insert({"address"        , REMOVE_HASH_BRAKETS(
-            xmreg::print_address(address_info, nettype))});
+            furyeg::print_address(address_info, nettype))});
     context.insert({"viewkey"        , pod_to_hex(prv_view_key)});
-    context.insert({"has_total_xmr"  , false});
-    context.insert({"total_xmr"      , string{}});
+    context.insert({"has_total_fury"  , false});
+    context.insert({"total_fury"      , string{}});
     context.insert({"output_keys"    , mstch::array{}});
 
     mstch::array& output_keys_ctx = boost::get<mstch::array>(context["output_keys"]);
@@ -4088,7 +4523,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
         return mstch::render(full_page, context);
     }
 
-    uint64_t total_xmr {0};
+    uint64_t total_fury {0};
     uint64_t output_no {0};
 
     context["are_key_images_known"] = false;
@@ -4101,7 +4536,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
         txout_to_key txout_key = boost::get<txout_to_key>(
                 txp.vout[td.m_internal_output_index].target);
 
-        uint64_t xmr_amount = td.amount();
+        uint64_t fury_amount = td.amount();
 
         // if the output is RingCT, i.e., tx version is 2
         // need to decode its amount
@@ -4120,7 +4555,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
                 return mstch::render(full_page, context);
             }
 
-            public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(tx);
+            public_key tx_pub_key = furyeg::get_tx_pub_key_from_received_outs(tx);
             std::vector<public_key> additional_tx_pub_keys = cryptonote::get_additional_tx_pub_keys_from_extra(tx);
 
             // cointbase txs have amounts in plain sight.
@@ -4133,13 +4568,13 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
                                        prv_view_key,
                                        td.m_internal_output_index,
                                        tx.rct_signatures.ecdhInfo[td.m_internal_output_index].mask,
-                                       xmr_amount);
+                                       fury_amount);
                 r = r || decode_ringct(tx.rct_signatures,
                                        additional_tx_pub_keys[td.m_internal_output_index],
                                        prv_view_key,
                                        td.m_internal_output_index,
                                        tx.rct_signatures.ecdhInfo[td.m_internal_output_index].mask,
-                                       xmr_amount);
+                                       fury_amount);
 
                 if (!r)
                 {
@@ -4178,9 +4613,9 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
         mstch::map output_info {
                 {"output_no"           , fmt::format("{:03d}", output_no)},
                 {"output_pub_key"      , REMOVE_HASH_BRAKETS(fmt::format("{:s}", txout_key.key))},
-                {"amount"              , xmreg::xmr_amount_to_str(xmr_amount)},
+                {"amount"              , furyeg::fury_amount_to_str(fury_amount)},
                 {"tx_hash"             , REMOVE_HASH_BRAKETS(fmt::format("{:s}", td.m_txid))},
-                {"timestamp"           , xmreg::timestamp_to_str_gm(blk_timestamp)},
+                {"timestamp"           , furyeg::timestamp_to_str_gm(blk_timestamp)},
                 {"is_spent"            , is_output_spent},
                 {"is_ringct"           , td.m_rct}
         };
@@ -4189,16 +4624,16 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
 
         if (!is_output_spent)
         {
-            total_xmr += xmr_amount;
+            total_fury += fury_amount;
         }
 
         output_keys_ctx.push_back(output_info);
     }
 
-    if (total_xmr > 0)
+    if (total_fury > 0)
     {
-        context["has_total_xmr"] = true;
-        context["total_xmr"] = xmreg::xmr_amount_to_str(total_xmr);
+        context["has_total_fury"] = true;
+        context["total_fury"] = furyeg::fury_amount_to_str(total_fury);
     }
 
     return mstch::render(full_page, context);;
@@ -4265,11 +4700,11 @@ search(string search_text)
     result_html = default_txt;
 
 
-    // check if monero address is given based on its length
+    // check if fury address is given based on its length
     // if yes, then we can only show its public components
     if (search_str_length == 95)
     {
-        // parse string representing given monero address
+        // parse string representing given fury address
         address_parse_info address_info;
 
         cryptonote::network_type nettype_addr {cryptonote::network_type::MAINNET};
@@ -4279,7 +4714,7 @@ search(string search_text)
         if (search_text[0] == '5' || search_text[0] == '7')
             nettype_addr = cryptonote::network_type::STAGENET;
 
-        if (!xmreg::parse_str_address(search_text, address_info, nettype_addr))
+        if (!furyeg::parse_str_address(search_text, address_info, nettype_addr))
         {
             cerr << "Cant parse string address: " << search_text << endl;
             return string("Cant parse address (probably incorrect format): ")
@@ -4289,7 +4724,7 @@ search(string search_text)
         return show_address_details(address_info, nettype_addr);
     }
 
-    // check if integrated monero address is given based on its length
+    // check if integrated fury address is given based on its length
     // if yes, then show its public components search tx based on encrypted id
     if (search_str_length == 106)
     {
@@ -4324,12 +4759,12 @@ string
 show_address_details(const address_parse_info& address_info, cryptonote::network_type nettype = cryptonote::network_type::MAINNET)
 {
 
-    string address_str      = xmreg::print_address(address_info, nettype);
+    string address_str      = furyeg::print_address(address_info, nettype);
     string pub_viewkey_str  = fmt::format("{:s}", address_info.address.m_view_public_key);
     string pub_spendkey_str = fmt::format("{:s}", address_info.address.m_spend_public_key);
 
     mstch::map context {
-            {"xmr_address"        , REMOVE_HASH_BRAKETS(address_str)},
+            {"fury_address"        , REMOVE_HASH_BRAKETS(address_str)},
             {"public_viewkey"     , REMOVE_HASH_BRAKETS(pub_viewkey_str)},
             {"public_spendkey"    , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
             {"is_integrated_addr" , false},
@@ -4350,13 +4785,13 @@ show_integrated_address_details(const address_parse_info& address_info,
                                 cryptonote::network_type nettype = cryptonote::network_type::MAINNET)
 {
 
-    string address_str        = xmreg::print_address(address_info, nettype);
+    string address_str        = furyeg::print_address(address_info, nettype);
     string pub_viewkey_str    = fmt::format("{:s}", address_info.address.m_view_public_key);
     string pub_spendkey_str   = fmt::format("{:s}", address_info.address.m_spend_public_key);
     string enc_payment_id_str = fmt::format("{:s}", encrypted_payment_id);
 
     mstch::map context {
-            {"xmr_address"          , REMOVE_HASH_BRAKETS(address_str)},
+            {"fury_address"          , REMOVE_HASH_BRAKETS(address_str)},
             {"public_viewkey"       , REMOVE_HASH_BRAKETS(pub_viewkey_str)},
             {"public_spendkey"      , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
             {"encrypted_payment_id" , REMOVE_HASH_BRAKETS(enc_payment_id_str)},
@@ -4533,7 +4968,7 @@ show_search_results(const string& search_text,
 
 
                 // add the timestamp to tx mstch map
-                txd_map.insert({"timestamp", xmreg::timestamp_to_str_gm(blk_timestamp)});
+                txd_map.insert({"timestamp", furyeg::timestamp_to_str_gm(blk_timestamp)});
 
                 boost::get<mstch::array>((res.first)->second).push_back(txd_map);
 
@@ -4596,7 +5031,7 @@ json_transaction(string tx_hash_str)
     // parse tx hash string to hash object
     crypto::hash tx_hash;
 
-    if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+    if (!furyeg::parse_str_secret_key(tx_hash_str, tx_hash))
     {
         j_data["title"] = fmt::format("Cant parse tx hash: {:s}", tx_hash_str);
         return j_response;
@@ -4649,7 +5084,7 @@ json_transaction(string tx_hash_str)
         }
     }
 
-    string blk_timestamp_utc = xmreg::timestamp_to_str_gm(tx_timestamp);
+    string blk_timestamp_utc = furyeg::timestamp_to_str_gm(tx_timestamp);
 
     // get the current blockchain height. Just to check
     uint64_t bc_height = core_storage->get_current_blockchain_height();
@@ -4687,7 +5122,7 @@ json_transaction(string tx_hash_str)
             if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
                 continue;
 
-            core_storage->get_db().get_output_key(in_key.amount,
+            core_storage->get_db().get_output_key(epee::span<const uint64_t>(&in_key.amount, 1),
                                                   absolute_offsets,
                                                   outputs);
         }
@@ -4762,7 +5197,7 @@ json_rawtransaction(string tx_hash_str)
     // parse tx hash string to hash object
     crypto::hash tx_hash;
 
-    if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+    if (!furyeg::parse_str_secret_key(tx_hash_str, tx_hash))
     {
         j_data["title"] = fmt::format("Cant parse tx hash: {:s}", tx_hash_str);
         return j_response;
@@ -4810,7 +5245,7 @@ json_rawtransaction(string tx_hash_str)
         }
     }
 
-    // get raw tx json as in monero
+    // get raw tx json as in fury
 
     try
     {
@@ -4863,7 +5298,7 @@ json_detailedtransaction(string tx_hash_str)
     tx_context.erase("show_part_of_inputs");
     tx_context.erase("show_more_details_link");
     tx_context.erase("max_no_of_inputs_to_show");
-    tx_context.erase("inputs_xmr_sum_not_zero");
+    tx_context.erase("inputs_fury_sum_not_zero");
     tx_context.erase("have_raw_tx");
     tx_context.erase("have_any_unknown_amount");
     tx_context.erase("has_error");
@@ -4935,7 +5370,7 @@ json_block(string block_no_or_hash)
     else if (block_no_or_hash.length() == 64)
     {
         // this seems to be block hash
-        if (!xmreg::parse_str_secret_key(block_no_or_hash, blk_hash))
+        if (!furyeg::parse_str_secret_key(block_no_or_hash, blk_hash))
         {
             j_data["title"] = fmt::format("Cant parse blk hash: {:s}", block_no_or_hash);
             return j_response;
@@ -5007,7 +5442,7 @@ json_block(string block_no_or_hash)
             {"block_height"  , block_height},
             {"hash"          , pod_to_hex(blk_hash)},
             {"timestamp"     , blk.timestamp},
-            {"timestamp_utc" , xmreg::timestamp_to_str_gm(blk.timestamp)},
+            {"timestamp_utc" , furyeg::timestamp_to_str_gm(blk.timestamp)},
             {"block_height"  , block_height},
             {"size"          , blk_size},
             {"txs"           , j_txs},
@@ -5078,7 +5513,7 @@ json_rawblock(string block_no_or_hash)
     else if (block_no_or_hash.length() == 64)
     {
         // this seems to be block hash
-        if (!xmreg::parse_str_secret_key(block_no_or_hash, blk_hash))
+        if (!furyeg::parse_str_secret_key(block_no_or_hash, blk_hash))
         {
             j_data["title"] = fmt::format("Cant parse blk hash: {:s}", block_no_or_hash);
             return j_response;
@@ -5098,7 +5533,7 @@ json_rawblock(string block_no_or_hash)
         return j_response;
     }
 
-    // get raw tx json as in monero
+    // get raw tx json as in fury
 
     try
     {
@@ -5199,7 +5634,7 @@ json_transactions(string _page, string _limit)
                 {"age"          , age.first},
                 {"size"         , blk_size},
                 {"timestamp"    , blk.timestamp},
-                {"timestamp_utc", xmreg::timestamp_to_str_gm(blk.timestamp)},
+                {"timestamp_utc", furyeg::timestamp_to_str_gm(blk.timestamp)},
                 {"txs"          , json::array()}
         });
 
@@ -5442,7 +5877,7 @@ json_outputs(string tx_hash_str,
     if (address_str.empty())
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Monero address not provided";
+        j_response["message"] = "Fury address not provided";
         return j_response;
     }
 
@@ -5466,20 +5901,20 @@ json_outputs(string tx_hash_str,
     // parse tx hash string to hash object
     crypto::hash tx_hash;
 
-    if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+    if (!furyeg::parse_str_secret_key(tx_hash_str, tx_hash))
     {
         j_response["status"]  = "error";
         j_response["message"] = "Cant parse tx hash: " + tx_hash_str;
         return j_response;
     }
 
-    // parse string representing given monero address
+    // parse string representing given fury address
     address_parse_info address_info;
 
-    if (!xmreg::parse_str_address(address_str,  address_info, nettype))
+    if (!furyeg::parse_str_address(address_str,  address_info, nettype))
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Cant parse monero address: " + address_str;
+        j_response["message"] = "Cant parse Fury address: " + address_str;
         return j_response;
 
     }
@@ -5487,7 +5922,7 @@ json_outputs(string tx_hash_str,
     // parse string representing given private key
     crypto::secret_key prv_view_key;
 
-    if (!xmreg::parse_str_secret_key(viewkey_str, prv_view_key))
+    if (!furyeg::parse_str_secret_key(viewkey_str, prv_view_key))
     {
         j_response["status"]  = "error";
         j_response["message"] = "Cant parse view key or tx private key: "
@@ -5553,7 +5988,7 @@ json_outputs(string tx_hash_str,
 
         // get the tx output public key
         // that normally would be generated for us,
-        // if someone had sent us some xmr.
+        // if someone had sent us some fury.
         public_key tx_pubkey;
 
         derive_public_key(derivation,
@@ -5667,7 +6102,7 @@ json_outputsblocks(string _limit,
     if (address_str.empty())
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Monero address not provided";
+        j_response["message"] = "Fury address not provided";
         return j_response;
     }
 
@@ -5678,13 +6113,13 @@ json_outputsblocks(string _limit,
         return j_response;
     }
 
-    // parse string representing given monero address
+    // parse string representing given Fury address
     address_parse_info address_info;
 
-    if (!xmreg::parse_str_address(address_str, address_info, nettype))
+    if (!furyeg::parse_str_address(address_str, address_info, nettype))
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Cant parse monero address: " + address_str;
+        j_response["message"] = "Cant parse Fury address: " + address_str;
         return j_response;
 
     }
@@ -5692,7 +6127,7 @@ json_outputsblocks(string _limit,
     // parse string representing given private key
     crypto::secret_key prv_view_key;
 
-    if (!xmreg::parse_str_secret_key(viewkey_str, prv_view_key))
+    if (!furyeg::parse_str_secret_key(viewkey_str, prv_view_key))
     {
         j_response["status"]  = "error";
         j_response["message"] = "Cant parse view key: "
@@ -5830,10 +6265,10 @@ json_networkinfo()
     json j_info;
 
     // get basic network info
-    if (!get_monero_network_info(j_info))
+    if (!get_fury_network_info(j_info))
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Cant get monero network info";
+        j_response["message"] = "Cant get Fury network info";
         return j_response;
     }
 
@@ -5888,13 +6323,14 @@ json_emission()
                 = CurrentBlockchainStatus::get_emission();
 
         string emission_blk_no   = std::to_string(current_values.blk_no - 1);
-        string emission_coinbase = xmr_amount_to_str(current_values.coinbase, "{:0.3f}");
-        string emission_fee      = xmr_amount_to_str(current_values.fee, "{:0.4f}", false);
+        string emission_coinbase = fury_amount_to_str(current_values.coinbase, "{:0.3f}");
+        string emission_fee      = fury_amount_to_str(current_values.fee, "{:0.4f}", false);
 
         j_data = json {
-                {"blk_no"  , current_values.blk_no - 1},
-                {"coinbase", current_values.coinbase},
-                {"fee"     , current_values.fee},
+                {"blk_no"  ,           current_values.blk_no - 1},
+                {"coinbase",           current_values.coinbase},
+                {"fee"     ,           current_values.fee},
+                {"circulating_supply", CurrentBlockchainStatus::circulating_supply},
         };
     }
 
@@ -5922,7 +6358,7 @@ json_version()
             {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
             {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
             {"git_branch_name"     , string {GIT_BRANCH_NAME}},
-            {"monero_version_full" , string {MONERO_VERSION_FULL}},
+            {"fury_version_full"   , string {FURY_VERSION_FULL}},
             {"api"                 , ONIONEXPLORER_RPC_VERSION},
             {"blockchain_height"   , core_storage->get_current_blockchain_height()}
     };
@@ -6014,7 +6450,7 @@ find_our_outputs(
 
             // get the tx output public key
             // that normally would be generated for us,
-            // if someone had sent us some xmr.
+            // if someone had sent us some fury.
             public_key tx_pubkey;
 
             derive_public_key(derivation,
@@ -6103,8 +6539,8 @@ get_tx_json(const transaction& tx, const tx_details& txd)
             {"tx_fee"      , txd.fee},
             {"mixin"       , txd.mixin_no},
             {"tx_size"     , txd.size},
-            {"xmr_outputs" , txd.xmr_outputs},
-            {"xmr_inputs"  , txd.xmr_inputs},
+            {"fury_outputs" , txd.fury_outputs},
+            {"fury_inputs"  , txd.fury_inputs},
             {"tx_version"  , static_cast<uint64_t>(txd.version)},
             {"rct_type"    , tx.rct_signatures.type},
             {"coinbase"    , is_coinbase(tx)},
@@ -6234,7 +6670,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
         // calculate difference between tx and server timestamps
         age = get_age(server_timestamp, blk.timestamp, FULL_AGE_FORMAT);
 
-        blk_timestamp = xmreg::timestamp_to_str_gm(blk.timestamp);
+        blk_timestamp = furyeg::timestamp_to_str_gm(blk.timestamp);
 
         tx_blk_height_str = std::to_string(tx_blk_height);
     }
@@ -6251,7 +6687,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
     double tx_size = static_cast<double>(txd.size) / 1024.0;
 
-    double payed_for_kB = XMR_AMOUNT(txd.fee) / tx_size;
+    double payed_for_kB = FURY_AMOUNT(txd.fee) / tx_size;
 
     // initalise page tempate map with basic info about blockchain
     mstch::map context {
@@ -6263,9 +6699,9 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
             {"blk_height"            , tx_blk_height_str},
             {"tx_blk_height"         , tx_blk_height},
             {"tx_size"               , fmt::format("{:0.4f}", tx_size)},
-            {"tx_fee"                , xmreg::xmr_amount_to_str(txd.fee, "{:0.12f}", false)},
-            {"tx_fee_micro"          , xmreg::xmr_amount_to_str(txd.fee*1e6, "{:0.4f}", false)},
-            {"payed_for_kB"          , fmt::format("{:0.12f}", payed_for_kB)},
+            {"tx_fee"                , furyeg::fury_amount_to_str(txd.fee, "{:0.9f}", false)},
+            {"tx_fee_micro"          , furyeg::fury_amount_to_str(txd.fee*1e6, "{:0.4f}", false)},
+            {"payed_for_kB"          , fmt::format("{:0.9f}", payed_for_kB)},
             {"tx_version"            , static_cast<uint64_t>(txd.version)},
             {"blk_timestamp"         , blk_timestamp},
             {"blk_timestamp_uint"    , blk.timestamp},
@@ -6293,6 +6729,93 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
             {"construction_time"     , string {}},
     };
 
+    if (tx.version >= transaction::version_3_per_output_unlock_times)
+    {
+        tx_extra_service_node_deregister deregister;
+        tx_extra_service_node_register   register_;
+        if (tx.get_type() == cryptonote::transaction::type_deregister)
+        {
+            context["have_deregister_info"] = true;
+            if (get_service_node_deregister_from_tx_extra(tx.extra, deregister))
+            {
+              context["deregister_service_node_index"]   = deregister.service_node_index;
+              context["deregister_block_height"]         = deregister.block_height;
+
+              char const vote_array_id[] = "deregister_vote_array";
+              context.emplace(vote_array_id, mstch::array());
+
+              mstch::array& vote_array = boost::get<mstch::array>(context[vote_array_id]);
+              vote_array.reserve(deregister.votes.size());
+
+              for (tx_extra_service_node_deregister::vote &vote : deregister.votes)
+              {
+                mstch::map entry
+                {
+                  {"deregister_voters_quorum_index", vote.voters_quorum_index},
+                  {"deregister_signature",           pod_to_hex(vote.signature)},
+                };
+
+                vote_array.push_back(entry);
+              }
+            }
+            else
+            {
+              static std::string unknown = "??";
+              context["deregister_service_node_index"] = unknown;
+              context["deregister_block_height"]       = unknown;
+            }
+        }
+        else if (get_service_node_register_from_tx_extra(tx.extra, register_))
+        {
+            // TODO(doyle): We should add a url for jumping to the node,
+            // maybe. We only have information about the current state of
+            // the network, so previous expired nodes no longer can be
+            // accessed. This needs the store to db functionality.
+            crypto::public_key snode_key;
+            if (get_service_node_pubkey_from_tx_extra(tx.extra, snode_key))
+            {
+              context["register_service_node_pubkey"] = pod_to_hex(snode_key);
+            }
+            else
+            {
+              static std::string parsing_error = "<pubkey parsing error>";
+              context["register_service_node_pubkey"] = parsing_error;
+            }
+
+            context["have_register_info"]             = true;
+            context["register_portions_for_operator"] = portions_to_percent(register_.m_portions_for_operator);
+            context["register_expiration_timestamp_friendly"]  = timestamp_to_str_gm(register_.m_expiration_timestamp);
+            context["register_expiration_timestamp_relative"]  = std::string(get_human_time_ago(register_.m_expiration_timestamp, time(nullptr)));
+            context["register_expiration_timestamp"]  = register_.m_expiration_timestamp;
+            context["register_signature"]             = pod_to_hex(register_.m_service_node_signature);
+
+            char const array_id[] = "register_array";
+            context.emplace(array_id, mstch::array());
+
+            mstch::array& array = boost::get<mstch::array>(context[array_id]);
+            array.reserve(register_.m_public_spend_keys.size());
+
+            for (size_t i = 0; i < register_.m_public_spend_keys.size(); ++i)
+            {
+              crypto::public_key const &spend_key = register_.m_public_spend_keys[i];
+              crypto::public_key const &view_key =  register_.m_public_view_keys[i];
+              auto portion = register_.m_portions[i];
+
+              account_public_address address = {};
+              address.m_spend_public_key     = spend_key;
+              address.m_view_public_key      = view_key;
+
+              mstch::map entry
+              {
+                {"register_address", get_account_address_as_str(nettype, false /*is_subaddress*/, address)},
+                {"register_portions", portions_to_percent(portion)},
+              };
+
+              array.push_back(entry);
+            }
+        }
+    }
+
     // append tx_json as in raw format to html
     context["tx_json_raw"] = mstch::lambda{[=](const std::string& text) -> mstch::node {
         return tx_json;
@@ -6307,13 +6830,13 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
     context["add_tx_pub_keys"] = add_tx_pub_keys;
 
-    string server_time_str = xmreg::timestamp_to_str_gm(server_timestamp, "%F");
+    string server_time_str = furyeg::timestamp_to_str_gm(server_timestamp, "%F");
 
     mstch::array inputs = mstch::array{};
 
     uint64_t input_idx {0};
 
-    uint64_t inputs_xmr_sum {0};
+    uint64_t inputs_fury_sum {0};
 
     // ringct inputs can be mixture of known amounts (when old outputs)
     // are spent, and unknown umounts (makrked in explorer by '?') when
@@ -6363,7 +6886,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
             // offsets seems good, so try to get the outputs for the amount and
             // offsets given
-            core_storage->get_db().get_output_key(in_key.amount,
+            core_storage->get_db().get_output_key(epee::span<const uint64_t>(&in_key.amount, 1),
                                                   absolute_offsets,
                                                   outputs);
         }
@@ -6389,7 +6912,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
         inputs.push_back(mstch::map {
                 {"in_key_img"   , pod_to_hex(in_key.k_image)},
-                {"amount"       , xmreg::xmr_amount_to_str(in_key.amount)},
+                {"amount"       , furyeg::fury_amount_to_str(in_key.amount)},
                 {"input_idx"    , fmt::format("{:02d}", input_idx)},
                 {"mixins"       , mstch::array{}},
                 {"ring_sigs"    , mstch::array{}},
@@ -6403,7 +6926,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
         }
 
 
-        inputs_xmr_sum += in_key.amount;
+        inputs_fury_sum += in_key.amount;
 
         if (in_key.amount == 0)
         {
@@ -6490,7 +7013,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
                         {"mix_pub_key",    pod_to_hex(output_data.pubkey)},
                         {"mix_tx_hash",    pod_to_hex(tx_out_idx.first)},
                         {"mix_out_indx",   tx_out_idx.second},
-                        {"mix_timestamp",  xmreg::timestamp_to_str_gm(blk.timestamp)},
+                        {"mix_timestamp",  furyeg::timestamp_to_str_gm(blk.timestamp)},
                         {"mix_age",        mixin_age.first},
                         {"mix_mixin_no",   mixin_txd.mixin_no},
                         {"mix_inputs_no",  static_cast<uint64_t>(mixin_txd.input_key_imgs.size())},
@@ -6539,8 +7062,8 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
                 );
 
 
-        context["min_mix_time"]     = xmreg::timestamp_to_str_gm(min_mix_timestamp);
-        context["max_mix_time"]     = xmreg::timestamp_to_str_gm(max_mix_timestamp);
+        context["min_mix_time"]     = furyeg::timestamp_to_str_gm(min_mix_timestamp);
+        context["max_mix_time"]     = furyeg::timestamp_to_str_gm(max_mix_timestamp);
 
         context.emplace("timescales", mixins_timescales.first);
 
@@ -6554,8 +7077,8 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
 
     context["have_any_unknown_amount"]  = have_any_unknown_amount;
-    context["inputs_xmr_sum_not_zero"]  = (inputs_xmr_sum > 0);
-    context["inputs_xmr_sum"]           = xmreg::xmr_amount_to_str(inputs_xmr_sum);
+    context["inputs_fury_sum_not_zero"]  = (inputs_fury_sum > 0);
+    context["inputs_fury_sum"]           = furyeg::fury_amount_to_str(inputs_fury_sum);
     context["server_time"]              = server_time_str;
     context["enable_mixins_details"]    = detailed_view;
     context["enable_as_hex"]            = enable_as_hex;
@@ -6576,7 +7099,8 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
         if (core_storage->get_db().tx_exists(txd.hash, tx_index))
         {
             out_amount_indices = core_storage->get_db()
-                    .get_tx_amount_output_indices(tx_index);
+                    .get_tx_amount_output_indices(tx_index)
+                    .front();
         }
         else
         {
@@ -6593,7 +7117,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
     mstch::array outputs;
 
-    uint64_t outputs_xmr_sum {0};
+    uint64_t outputs_fury_sum {0};
 
     for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
     {
@@ -6612,11 +7136,11 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
                     = std::to_string(out_amount_indices.at(output_idx));
         }
 
-        outputs_xmr_sum += outp.second;
+        outputs_fury_sum += outp.second;
 
         outputs.push_back(mstch::map {
                 {"out_pub_key"           , pod_to_hex(outp.first.key)},
-                {"amount"                , xmreg::xmr_amount_to_str(outp.second)},
+                {"amount"                , furyeg::fury_amount_to_str(outp.second)},
                 {"amount_idx"            , out_amount_index_str},
                 {"num_outputs"           , num_outputs_amount},
                 {"unformated_output_idx" , output_idx},
@@ -6625,7 +7149,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
     } //  for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
 
-    context["outputs_xmr_sum"] = xmreg::xmr_amount_to_str(outputs_xmr_sum);
+    context["outputs_fury_sum"] = furyeg::fury_amount_to_str(outputs_fury_sum);
 
     context.emplace("outputs", outputs);
 
@@ -6670,7 +7194,7 @@ construct_mstch_mixin_timescales(
     for (auto& mixn_timestamps : mixin_timestamp_groups)
     {
         // get mixins in time scale for visual representation
-        pair<string, double> mixin_times_scale = xmreg::timestamps_time_scale(
+        pair<string, double> mixin_times_scale = furyeg::timestamps_time_scale(
                 mixn_timestamps,
                 max_mix_timestamp,
                 170,
@@ -6704,16 +7228,16 @@ get_tx_details(const transaction& tx,
     // this check if there are two public keys
     // due to previous bug with sining txs:
     // https://github.com/monero-project/monero/pull/1358/commits/7abfc5474c0f86e16c405f154570310468b635c2
-    txd.pk = xmreg::get_tx_pub_key_from_received_outs(tx);
+    txd.pk = furyeg::get_tx_pub_key_from_received_outs(tx);
     txd.additional_pks = cryptonote::get_additional_tx_pub_keys_from_extra(tx);
 
 
-    // sum xmr in inputs and ouputs in the given tx
+    // sum fury in inputs and ouputs in the given tx
     const array<uint64_t, 4>& sum_data = summary_of_in_out_rct(
             tx, txd.output_pub_keys, txd.input_key_imgs);
 
-    txd.xmr_outputs       = sum_data[0];
-    txd.xmr_inputs        = sum_data[1];
+    txd.fury_outputs       = sum_data[0];
+    txd.fury_inputs        = sum_data[1];
     txd.mixin_no          = sum_data[2];
     txd.num_nonrct_inputs = sum_data[3];
 
@@ -6817,7 +7341,7 @@ find_tx_for_json(
     // parse tx hash string to hash object
     crypto::hash tx_hash;
 
-    if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+    if (!furyeg::parse_str_secret_key(tx_hash_str, tx_hash))
     {
         error_message = fmt::format("Cant parse tx hash: {:s}", tx_hash_str);
         return false;
@@ -6918,7 +7442,7 @@ get_full_page(const string& middle)
 }
 
 bool
-get_monero_network_info(json& j_info)
+get_fury_network_info(json& j_info)
 {
     MempoolStatus::network_info local_copy_network_info
         = MempoolStatus::current_network_info;
@@ -6946,7 +7470,8 @@ get_monero_network_info(json& j_info)
        {"block_size_median"         , local_copy_network_info.block_size_median},
        {"start_time"                , local_copy_network_info.start_time},
        {"fee_per_kb"                , local_copy_network_info.fee_per_kb},
-       {"current_hf_version"        , local_copy_network_info.current_hf_version}
+       {"current_hf_version"        , local_copy_network_info.current_hf_version},
+       {"total_blockchain_size"     , local_copy_network_info.total_blockchain_size}
     };
 
     return local_copy_network_info.current;
@@ -7013,13 +7538,13 @@ get_footer()
             {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
             {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
             {"git_branch_name"     , string {GIT_BRANCH_NAME}},
-            {"monero_version_full" , string {MONERO_VERSION_FULL}},
+            {"fury_version_full"   , string {FURY_VERSION_FULL}},
             {"api"                 , std::to_string(ONIONEXPLORER_RPC_VERSION_MAJOR)
                                      + "."
                                      + std::to_string(ONIONEXPLORER_RPC_VERSION_MINOR)},
     };
 
-    string footer_html = mstch::render(xmreg::read(TMPL_FOOTER), footer_context);
+    string footer_html = mstch::render(furyeg::read(TMPL_FOOTER), footer_context);
 
     return footer_html;
 }
@@ -7084,5 +7609,5 @@ add_js_files(mstch::map& context)
 }
 
 
-#endif //CROWXMR_PAGE_H
+#endif //CROWFURY_PAGE_H
 

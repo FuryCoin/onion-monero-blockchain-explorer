@@ -6,16 +6,17 @@
 #include "ext/crow/crow.h"
 #include "src/CmdLineOptions.h"
 #include "src/MicroCore.h"
+#include "src/CurrentBlockchainStatus.h"
 
 #include <fstream>
 #include <regex>
 
 using boost::filesystem::path;
-using xmreg::remove_bad_chars;
+using furyeg::remove_bad_chars;
 
 using namespace std;
 
-namespace myxmr
+namespace myfury
 {
 struct jsonresponse: crow::response
 {
@@ -33,7 +34,7 @@ int
 main(int ac, const char* av[])
 {
     // get command line options
-    xmreg::CmdLineOptions opts {ac, av};
+    furyeg::CmdLineOptions opts {ac, av};
 
     auto help_opt                      = opts.get_option<bool>("help");
 
@@ -46,7 +47,7 @@ main(int ac, const char* av[])
     auto port_opt                      = opts.get_option<string>("port");
     auto bindaddr_opt                  = opts.get_option<string>("bindaddr");
     auto bc_path_opt                   = opts.get_option<string>("bc-path");
-    auto deamon_url_opt                = opts.get_option<string>("deamon-url");
+    auto daemon_url_opt                = opts.get_option<string>("daemon-url");
     auto ssl_crt_file_opt              = opts.get_option<string>("ssl-crt-file");
     auto ssl_key_file_opt              = opts.get_option<string>("ssl-key-file");
     auto no_blocks_on_index_opt        = opts.get_option<string>("no-blocks-on-index");
@@ -99,7 +100,7 @@ main(int ac, const char* av[])
     bool show_cache_times             {*show_cache_times_opt};
 
 
-    // set  monero log output level
+    // set  fury log output level
     uint32_t log_level = 0;
     mlog_configure("", true);
 
@@ -149,7 +150,7 @@ main(int ac, const char* av[])
     // get blockchain path
     path blockchain_path;
 
-    if (!xmreg::get_blockchain_path(bc_path_opt, blockchain_path, nettype))
+    if (!furyeg::get_blockchain_path(bc_path_opt, blockchain_path, nettype))
     {
         cerr << "Error getting blockchain path." << endl;
         return EXIT_FAILURE;
@@ -160,18 +161,18 @@ main(int ac, const char* av[])
 
     // create instance of our MicroCore
     // and make pointer to the Blockchain
-    xmreg::MicroCore mcore;
+    furyeg::MicroCore mcore;
     cryptonote::Blockchain* core_storage;
 
     // initialize mcore and core_storage
-    if (!xmreg::init_blockchain(blockchain_path.string(),
+    if (!furyeg::init_blockchain(blockchain_path.string(),
                                mcore, core_storage, nettype))
     {
         cerr << "Error accessing blockchain." << endl;
         return EXIT_FAILURE;
     }
 
-    string deamon_url {*deamon_url_opt};
+    string daemon_url {*daemon_url_opt};
 
     if (testnet && deamon_url == "http:://127.0.0.1:18081")
         deamon_url = "http:://127.0.0.1:28081";
@@ -197,47 +198,48 @@ main(int ac, const char* av[])
     {
         // This starts new thread, which aim is
         // to calculate, store and monitor
-        // current total Monero emission amount.
+        // current total Fury emission amount.
 
         // This thread stores the current emission
         // which it has caluclated in
         // <blockchain_path>/emission_amount.txt file,
-        // e.g., ~/.bitmonero/lmdb/emission_amount.txt.
+        // e.g., ~/.fury/lmdb/emission_amount.txt.
         // So instead of calcualting the emission
         // from scrach whenever the explorer is started,
         // the thread is initalized with the values
         // found in emission_amount.txt file.
 
-        xmreg::CurrentBlockchainStatus::blockchain_path
+        furyeg::CurrentBlockchainStatus::blockchain_path
                 = blockchain_path;
-        xmreg::CurrentBlockchainStatus::nettype
+        furyeg::CurrentBlockchainStatus::nettype
                 = nettype;
-        xmreg::CurrentBlockchainStatus::deamon_url
-                = deamon_url;
-        xmreg::CurrentBlockchainStatus::set_blockchain_variables(
+        furyeg::CurrentBlockchainStatus::daemon_url
+                = daemon_url;
+        furyeg::CurrentBlockchainStatus::set_blockchain_variables(
                 &mcore, core_storage);
 
         // launch the status monitoring thread so that it keeps track of blockchain
         // info, e.g., current height. Information from this thread is used
         // by tx searching threads that are launched for each user independently,
         // when they log back or create new account.
-        xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
+        furyeg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
     }
 
 
-    xmreg::MempoolStatus::blockchain_path
+    furyeg::MempoolStatus::blockchain_path
             = blockchain_path;
-    xmreg::MempoolStatus::nettype
+    furyeg::MempoolStatus::nettype
             = nettype;
-    xmreg::MempoolStatus::deamon_url
-            = deamon_url;
-    xmreg::MempoolStatus::set_blockchain_variables(
+    furyeg::MempoolStatus::daemon_url
+            = daemon_url;
+    furyeg::MempoolStatus::set_blockchain_variables(
             &mcore, core_storage);
 
-    xmreg::MempoolStatus::network_info initial_info;
+    furyeg::MempoolStatus::network_info initial_info;
     strcpy(initial_info.block_size_limit_str, "0.0");
     strcpy(initial_info.block_size_median_str, "0.0");
-    xmreg::MempoolStatus::current_network_info = initial_info;
+    strcpy(initial_info.total_blockchain_size_str, "0.0");
+    furyeg::MempoolStatus::current_network_info = initial_info;
 
     try
     {
@@ -255,14 +257,14 @@ main(int ac, const char* av[])
     // info, e.g., current height. Information from this thread is used
     // by tx searching threads that are launched for each user independently,
     // when they log back or create new account.
-    xmreg::MempoolStatus::mempool_refresh_time = mempool_refresh_time;
-    xmreg::MempoolStatus::start_mempool_status_thread();
-
+    furyeg::MempoolStatus::mempool_refresh_time = mempool_refresh_time;
+    furyeg::MempoolStatus::start_mempool_status_thread();
+ 
     // create instance of page class which
     // contains logic for the website
-    xmreg::page xmrblocks(&mcore,
+    furyeg::page furyblocks(&mcore,
                           core_storage,
-                          deamon_url,
+                          daemon_url,
                           nettype,
                           enable_pusher,
                           enable_js,
@@ -290,50 +292,50 @@ main(int ac, const char* av[])
     };
 
     CROW_ROUTE(app, "/")
-    ([&]() {
-        return crow::response(xmrblocks.index2());
+    ([&](const crow::request& req) {
+        return crow::response(furyblocks.index2());
     });
 
     CROW_ROUTE(app, "/page/<uint>")
     ([&](size_t page_no) {
-        return xmrblocks.index2(page_no);
+        return furyblocks.index2(page_no);
     });
 
     CROW_ROUTE(app, "/block/<uint>")
-    ([&](size_t block_height) {
-        return crow::response(xmrblocks.show_block(block_height));
+    ([&](const crow::request& req, size_t block_height) {
+        return crow::response(furyblocks.show_block(block_height));
     });
 
     CROW_ROUTE(app, "/block/<string>")
-    ([&](string block_hash) {
-        return crow::response(xmrblocks.show_block(remove_bad_chars(block_hash)));
+    ([&](const crow::request& req, string block_hash) {
+        return crow::response(furyblocks.show_block(remove_bad_chars(block_hash)));
     });
 
     CROW_ROUTE(app, "/tx/<string>")
-    ([&](string tx_hash) {
-        return crow::response(xmrblocks.show_tx(remove_bad_chars(tx_hash)));
+    ([&](const crow::request& req, string tx_hash) {
+        return crow::response(furyblocks.show_tx(remove_bad_chars(tx_hash)));
     });
 
     if (enable_as_hex)
     {
         CROW_ROUTE(app, "/txhex/<string>")
         ([&](string tx_hash) {
-            return crow::response(xmrblocks.show_tx_hex(remove_bad_chars(tx_hash)));
+            return crow::response(furyblocks.show_tx_hex(remove_bad_chars(tx_hash)));
         });
 
         CROW_ROUTE(app, "/ringmembershex/<string>")
         ([&](string tx_hash) {
-            return crow::response(xmrblocks.show_ringmembers_hex(remove_bad_chars(tx_hash)));
+            return crow::response(furyblocks.show_ringmembers_hex(remove_bad_chars(tx_hash)));
         });
 
         CROW_ROUTE(app, "/blockhex/<uint>")
         ([&](size_t block_height) {
-            return crow::response(xmrblocks.show_block_hex(block_height, false));
+            return crow::response(furyblocks.show_block_hex(block_height, false));
         });
 
         CROW_ROUTE(app, "/blockhexcomplete/<uint>")
         ([&](size_t block_height) {
-            return crow::response(xmrblocks.show_block_hex(block_height, true));
+            return crow::response(furyblocks.show_block_hex(block_height, true));
         });
 
 //        CROW_ROUTE(app, "/ringmemberstxhex/<string>")
@@ -343,7 +345,7 @@ main(int ac, const char* av[])
 
         CROW_ROUTE(app, "/ringmemberstxhex/<string>")
         ([&](string tx_hash) {
-            return myxmr::jsonresponse {xmrblocks.show_ringmemberstx_jsonhex(remove_bad_chars(tx_hash))};
+            return myfury::jsonresponse {furyblocks.show_ringmemberstx_jsonhex(remove_bad_chars(tx_hash))};
         });
 
     }
@@ -351,25 +353,47 @@ main(int ac, const char* av[])
     CROW_ROUTE(app, "/tx/<string>/<uint>")
     ([&](string tx_hash, uint16_t with_ring_signatures)
      {
-        return xmrblocks.show_tx(remove_bad_chars(tx_hash), with_ring_signatures);
+        return furyblocks.show_tx(remove_bad_chars(tx_hash), with_ring_signatures);
     });
+
+    CROW_ROUTE(app, "/service_node/<string>")
+    ([&](const crow::request& req, std::string service_node_pubkey) {
+        return crow::response(furyblocks.show_service_node(remove_bad_chars(service_node_pubkey)));
+    });
+
+    CROW_ROUTE(app, "/service_nodes")
+    ([&](const crow::request& req) {
+        return furyblocks.render_service_nodes_html(true /*add_header_and_footer*/);
+    });
+
+    CROW_ROUTE(app, "/quorums")
+    ([&](const crow::request& req) {
+        return furyblocks.render_quorum_states_html(true /*add_header_and_footer*/);
+    });
+
+    // TODO(fury): This should be combined into the normal search mechanism, we shouldn't have 2 search bars.
+    CROW_ROUTE(app, "/search_service_node").methods("GET"_method)
+    ([&](const crow::request& req) {
+        return furyblocks.show_service_node(remove_bad_chars(string(req.url_params.get("value"))));
+    });
+
 
     CROW_ROUTE(app, "/myoutputs").methods("POST"_method)
     ([&](const crow::request& req)
      {
 
         map<std::string, std::string> post_body
-                = xmreg::parse_crow_post_data(req.body);
+                = furyeg::parse_crow_post_data(req.body);
 
-        if (post_body.count("xmr_address") == 0
+        if (post_body.count("fury_address") == 0
             || post_body.count("viewkey") == 0
             || post_body.count("tx_hash") == 0)
         {
-            return string("xmr address, viewkey or tx hash not provided");
+            return string("fury address, viewkey or tx hash not provided");
         }
 
         string tx_hash     = remove_bad_chars(post_body["tx_hash"]);
-        string xmr_address = remove_bad_chars(post_body["xmr_address"]);
+        string fury_address = remove_bad_chars(post_body["fury_address"]);
         string viewkey     = remove_bad_chars(post_body["viewkey"]);
 
         // this will be only not empty when checking raw tx data
@@ -378,20 +402,20 @@ main(int ac, const char* av[])
 
         string domain      =  get_domain(req);
 
-        return xmrblocks.show_my_outputs(tx_hash, xmr_address,
+        return furyblocks.show_my_outputs(tx_hash, fury_address,
                                          viewkey, raw_tx_data,
                                          domain);
     });
 
     CROW_ROUTE(app, "/myoutputs/<string>/<string>/<string>")
     ([&](const crow::request& req, string tx_hash,
-        string xmr_address, string viewkey)
+        string fury_address, string viewkey)
      {
 
         string domain = get_domain(req);
 
-        return xmrblocks.show_my_outputs(remove_bad_chars(tx_hash),
-                                         remove_bad_chars(xmr_address),
+        return furyblocks.show_my_outputs(remove_bad_chars(tx_hash),
+                                         remove_bad_chars(fury_address),
                                          remove_bad_chars(viewkey),
                                          string {},
                                          domain);
@@ -401,19 +425,19 @@ main(int ac, const char* av[])
         ([&](const crow::request& req) {
 
             map<std::string, std::string> post_body
-                    = xmreg::parse_crow_post_data(req.body);
+                    = furyeg::parse_crow_post_data(req.body);
 
-            if (post_body.count("xmraddress") == 0
+            if (post_body.count("furyaddress") == 0
                 || post_body.count("txprvkey") == 0
                 || post_body.count("txhash") == 0)
             {
-                return string("xmr address, tx private key or "
+                return string("fury address, tx private key or "
                                       "tx hash not provided");
             }
 
             string tx_hash     = remove_bad_chars(post_body["txhash"]);
             string tx_prv_key  = remove_bad_chars(post_body["txprvkey"]);
-            string xmr_address = remove_bad_chars(post_body["xmraddress"]);
+            string fury_address = remove_bad_chars(post_body["furyaddress"]);
 
             // this will be only not empty when checking raw tx data
             // using tx pusher
@@ -421,8 +445,8 @@ main(int ac, const char* av[])
 
             string domain      = get_domain(req);
 
-            return xmrblocks.show_prove(tx_hash,
-                                        xmr_address,
+            return furyblocks.show_prove(tx_hash,
+                                        fury_address,
                                         tx_prv_key,
                                         raw_tx_data,
                                         domain);
@@ -431,12 +455,12 @@ main(int ac, const char* av[])
 
     CROW_ROUTE(app, "/prove/<string>/<string>/<string>")
     ([&](const crow::request& req, string tx_hash,
-         string xmr_address, string tx_prv_key) {
+         string fury_address, string tx_prv_key) {
 
         string domain = get_domain(req);
 
-        return xmrblocks.show_prove(remove_bad_chars(tx_hash),
-                                    remove_bad_chars(xmr_address),
+        return furyblocks.show_prove(remove_bad_chars(tx_hash),
+                                    remove_bad_chars(fury_address),
                                     remove_bad_chars(tx_prv_key),
                                     string {},
                                     domain);
@@ -445,15 +469,15 @@ main(int ac, const char* av[])
     if (enable_pusher)
     {
         CROW_ROUTE(app, "/rawtx")
-        ([&]() {
-            return xmrblocks.show_rawtx();
+        ([&](const crow::request& req) {
+            return furyblocks.show_rawtx();
         });
 
         CROW_ROUTE(app, "/checkandpush").methods("POST"_method)
         ([&](const crow::request& req) {
 
             map<std::string, std::string> post_body
-                    = xmreg::parse_crow_post_data(req.body);
+                    = furyeg::parse_crow_post_data(req.body);
 
             if (post_body.count("rawtxdata") == 0 || post_body.count("action") == 0)
             {
@@ -464,9 +488,9 @@ main(int ac, const char* av[])
             string action      = remove_bad_chars(post_body["action"]);
 
             if (action == "check")
-                return xmrblocks.show_checkrawtx(raw_tx_data, action);
+                return furyblocks.show_checkrawtx(raw_tx_data, action);
             else if (action == "push")
-                return xmrblocks.show_pushrawtx(raw_tx_data, action);
+                return furyblocks.show_pushrawtx(raw_tx_data, action);
             return string("Provided action is neither check nor push");
 
         });
@@ -475,15 +499,15 @@ main(int ac, const char* av[])
     if (enable_key_image_checker)
     {
         CROW_ROUTE(app, "/rawkeyimgs")
-        ([&]() {
-            return xmrblocks.show_rawkeyimgs();
+        ([&](const crow::request& req) {
+            return furyblocks.show_rawkeyimgs();
         });
 
         CROW_ROUTE(app, "/checkrawkeyimgs").methods("POST"_method)
         ([&](const crow::request& req) {
 
             map<std::string, std::string> post_body
-                    = xmreg::parse_crow_post_data(req.body);
+                    = furyeg::parse_crow_post_data(req.body);
 
             if (post_body.count("rawkeyimgsdata") == 0)
             {
@@ -498,7 +522,7 @@ main(int ac, const char* av[])
             string raw_data = remove_bad_chars(post_body["rawkeyimgsdata"]);
             string viewkey  = remove_bad_chars(post_body["viewkey"]);
 
-            return xmrblocks.show_checkrawkeyimgs(raw_data, viewkey);
+            return furyblocks.show_checkrawkeyimgs(raw_data, viewkey);
         });
     }
 
@@ -506,15 +530,15 @@ main(int ac, const char* av[])
     if (enable_output_key_checker)
     {
         CROW_ROUTE(app, "/rawoutputkeys")
-        ([&]() {
-            return xmrblocks.show_rawoutputkeys();
+        ([&](const crow::request& req) {
+            return furyblocks.show_rawoutputkeys();
         });
 
         CROW_ROUTE(app, "/checkrawoutputkeys").methods("POST"_method)
         ([&](const crow::request& req) {
 
             map<std::string, std::string> post_body
-                    = xmreg::parse_crow_post_data(req.body);
+                    = furyeg::parse_crow_post_data(req.body);
 
             if (post_body.count("rawoutputkeysdata") == 0)
             {
@@ -530,30 +554,30 @@ main(int ac, const char* av[])
             string raw_data = remove_bad_chars(post_body["rawoutputkeysdata"]);
             string viewkey  = remove_bad_chars(post_body["viewkey"]);
 
-            return xmrblocks.show_checkcheckrawoutput(raw_data, viewkey);
+            return furyblocks.show_checkcheckrawoutput(raw_data, viewkey);
         });
     }
 
 
     CROW_ROUTE(app, "/search").methods("GET"_method)
     ([&](const crow::request& req) {
-        return xmrblocks.search(remove_bad_chars(string(req.url_params.get("value"))));
+        return furyblocks.search(remove_bad_chars(string(req.url_params.get("value"))));
     });
 
     CROW_ROUTE(app, "/mempool")
-    ([&]() {
-        return xmrblocks.mempool(true);
+    ([&](const crow::request& req) {
+        return furyblocks.mempool(true);
     });
 
     // alias to  "/mempool"
     CROW_ROUTE(app, "/txpool")
-    ([&]() {
-        return xmrblocks.mempool(true);
+    ([&](const crow::request& req) {
+        return furyblocks.mempool(true);
     });
 
 //    CROW_ROUTE(app, "/altblocks")
 //    ([&](const crow::request& req) {
-//        return xmrblocks.altblocks();
+//        return furyblocks.altblocks();
 //    });
 
     CROW_ROUTE(app, "/robots.txt")
@@ -568,55 +592,55 @@ main(int ac, const char* av[])
         cout << "Enable JavaScript checking of outputs and proving txs\n";
 
         CROW_ROUTE(app, "/js/jquery.min.js")
-        ([&]() {
-            return xmrblocks.get_js_file("jquery.min.js");
+        ([&](const crow::request& req) {
+            return furyblocks.get_js_file("jquery.min.js");
         });
 
         CROW_ROUTE(app, "/js/crc32.js")
-        ([&]() {
-            return xmrblocks.get_js_file("crc32.js");
+        ([&](const crow::request& req) {
+            return furyblocks.get_js_file("crc32.js");
         });
 
         CROW_ROUTE(app, "/js/biginteger.js")
-        ([&]() {
-            return xmrblocks.get_js_file("biginteger.js");
+        ([&](const crow::request& req) {
+            return furyblocks.get_js_file("biginteger.js");
         });
 
         CROW_ROUTE(app, "/js/crypto.js")
-        ([&]() {
-            return xmrblocks.get_js_file("crypto.js");
+        ([&](const crow::request& req) {
+            return furyblocks.get_js_file("crypto.js");
         });
 
         CROW_ROUTE(app, "/js/config.js")
-        ([&]() {
-            return xmrblocks.get_js_file("config.js");
+        ([&](const crow::request& req) {
+            return furyblocks.get_js_file("config.js");
         });
 
         CROW_ROUTE(app, "/js/nacl-fast-cn.js")
-        ([&]() {
-            return xmrblocks.get_js_file("nacl-fast-cn.js");
+        ([&](const crow::request& req) {
+            return furyblocks.get_js_file("nacl-fast-cn.js");
         });
 
         CROW_ROUTE(app, "/js/base58.js")
-        ([&]() {
-            return xmrblocks.get_js_file("base58.js");
+        ([&](const crow::request& req) {
+            return furyblocks.get_js_file("base58.js");
         });
 
         CROW_ROUTE(app, "/js/cn_util.js")
-        ([&]() {
-            return xmrblocks.get_js_file("cn_util.js");
+        ([&](const crow::request& req) {
+            return furyblocks.get_js_file("cn_util.js");
         });
 
         CROW_ROUTE(app, "/js/sha3.js")
-        ([&]() {
-            return xmrblocks.get_js_file("sha3.js");
+        ([&](const crow::request& req) {
+            return furyblocks.get_js_file("sha3.js");
         });
 
         CROW_ROUTE(app, "/js/all_in_one.js")
         ([&]() {
             // /js/all_in_one.js file does not exist. it is generated on the fly
             // from the above real files.
-            return xmrblocks.get_js_file("all_in_one.js");
+            return furyblocks.get_js_file("all_in_one.js");
         });
 
     } // if (enable_js)
@@ -629,7 +653,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/transaction/<string>")
         ([&](string tx_hash) {
 
-            myxmr::jsonresponse r{xmrblocks.json_transaction(remove_bad_chars(tx_hash))};
+            myfury::jsonresponse r{furyblocks.json_transaction(remove_bad_chars(tx_hash))};
 
             return r;
         });
@@ -637,7 +661,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/rawtransaction/<string>")
         ([&](string tx_hash) {
 
-            myxmr::jsonresponse r{xmrblocks.json_rawtransaction(remove_bad_chars(tx_hash))};
+            myfury::jsonresponse r{furyblocks.json_rawtransaction(remove_bad_chars(tx_hash))};
 
             return r;
         });
@@ -645,7 +669,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/detailedtransaction/<string>")
         ([&](string tx_hash) {
 
-            myxmr::jsonresponse r{xmrblocks.json_detailedtransaction(remove_bad_chars(tx_hash))};
+            myfury::jsonresponse r{furyblocks.json_detailedtransaction(remove_bad_chars(tx_hash))};
 
             return r;
         });
@@ -653,7 +677,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/block/<string>")
         ([&](string block_no_or_hash) {
 
-            myxmr::jsonresponse r{xmrblocks.json_block(remove_bad_chars(block_no_or_hash))};
+            myfury::jsonresponse r{furyblocks.json_block(remove_bad_chars(block_no_or_hash))};
 
             return r;
         });
@@ -661,7 +685,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/rawblock/<string>")
         ([&](string block_no_or_hash) {
 
-            myxmr::jsonresponse r{xmrblocks.json_rawblock(remove_bad_chars(block_no_or_hash))};
+            myfury::jsonresponse r{furyblocks.json_rawblock(remove_bad_chars(block_no_or_hash))};
 
             return r;
         });
@@ -675,7 +699,7 @@ main(int ac, const char* av[])
             string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
                            req.url_params.get("limit") : "25";
 
-            myxmr::jsonresponse r{xmrblocks.json_transactions(
+            myfury::jsonresponse r{furyblocks.json_transactions(
                     remove_bad_chars(page), remove_bad_chars(limit))};
 
             return r;
@@ -693,7 +717,7 @@ main(int ac, const char* av[])
             string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
                            req.url_params.get("limit") : "100000000";
 
-            myxmr::jsonresponse r{xmrblocks.json_mempool(
+            myfury::jsonresponse r{furyblocks.json_mempool(
                     remove_bad_chars(page), remove_bad_chars(limit))};
 
             return r;
@@ -702,7 +726,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/search/<string>")
         ([&](string search_value) {
 
-            myxmr::jsonresponse r{xmrblocks.json_search(remove_bad_chars(search_value))};
+            myfury::jsonresponse r{furyblocks.json_search(remove_bad_chars(search_value))};
 
             return r;
         });
@@ -710,7 +734,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/networkinfo")
         ([&]() {
 
-            myxmr::jsonresponse r{xmrblocks.json_networkinfo()};
+            myfury::jsonresponse r{furyblocks.json_networkinfo()};
 
             return r;
         });
@@ -718,9 +742,13 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/emission")
         ([&]() {
 
-            myxmr::jsonresponse r{xmrblocks.json_emission()};
-
+            myfury::jsonresponse r{furyblocks.json_emission()};
             return r;
+        });
+
+        CROW_ROUTE(app, "/api/circulating_supply") ([&]() {
+            std::string result = std::to_string(furyeg::CurrentBlockchainStatus::circulating_supply);
+            return std::move(result);
         });
 
         CROW_ROUTE(app, "/api/outputs").methods("GET"_method)
@@ -748,7 +776,7 @@ main(int ac, const char* av[])
                 cerr << "Cant parse tx_prove as bool. Using default value" << endl;
             }
 
-            myxmr::jsonresponse r{xmrblocks.json_outputs(
+            myfury::jsonresponse r{furyblocks.json_outputs(
                     remove_bad_chars(tx_hash),
                     remove_bad_chars(address),
                     remove_bad_chars(viewkey),
@@ -782,7 +810,7 @@ main(int ac, const char* av[])
                 cerr << "Cant parse tx_prove as bool. Using default value" << endl;
             }
 
-            myxmr::jsonresponse r{xmrblocks.json_outputsblocks(
+            myfury::jsonresponse r{furyblocks.json_outputsblocks(
                     remove_bad_chars(limit),
                     remove_bad_chars(address),
                     remove_bad_chars(viewkey),
@@ -794,7 +822,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/version")
         ([&]() {
 
-            myxmr::jsonresponse r{xmrblocks.json_version()};
+            myfury::jsonresponse r{furyblocks.json_version()};
 
             return r;
         });
@@ -807,7 +835,7 @@ main(int ac, const char* av[])
         ([&]() {
             uint64_t page_no {0};
             bool refresh_page {true};
-            return xmrblocks.index2(page_no, refresh_page);
+            return furyblocks.index2(page_no, refresh_page);
         });
     }
 
@@ -832,8 +860,8 @@ main(int ac, const char* av[])
 
         cout << "Waiting for emission monitoring thread to finish." << endl;
 
-        xmreg::CurrentBlockchainStatus::m_thread.interrupt();
-        xmreg::CurrentBlockchainStatus::m_thread.join();
+        furyeg::CurrentBlockchainStatus::m_thread.interrupt();
+        furyeg::CurrentBlockchainStatus::m_thread.join();
 
         cout << "Emission monitoring thread finished." << endl;
     }
@@ -842,8 +870,8 @@ main(int ac, const char* av[])
 
     cout << "Waiting for mempool monitoring thread to finish." << endl;
 
-    xmreg::MempoolStatus::m_thread.interrupt();
-    xmreg::MempoolStatus::m_thread.join();
+    furyeg::MempoolStatus::m_thread.interrupt();
+    furyeg::MempoolStatus::m_thread.join();
 
     cout << "Mempool monitoring thread finished." << endl;
 

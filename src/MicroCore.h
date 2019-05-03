@@ -2,15 +2,15 @@
 // Created by mwo on 5/11/15.
 //
 
-#ifndef XMREG01_MICROCORE_H
-#define XMREG01_MICROCORE_H
+#ifndef FURYEG01_MICROCORE_H
+#define FURYEG01_MICROCORE_H
 
 #include <iostream>
 
-#include "monero_headers.h"
+#include "fury_headers.h"
 #include "tools.h"
 
-namespace xmreg
+namespace furyeg
 {
     using namespace cryptonote;
     using namespace crypto;
@@ -28,14 +28,17 @@ namespace xmreg
 
         string blockchain_path;
 
-        tx_memory_pool m_mempool;
         Blockchain m_blockchain_storage;
+        tx_memory_pool m_mempool;
+        service_nodes::deregister_vote_pool m_deregister_vote_pool;
 
         hw::device* m_device;
 
         network_type nettype;
 
     public:
+        service_nodes::service_node_list m_service_node_list;
+
         MicroCore();
 
         bool
@@ -90,4 +93,4 @@ namespace xmreg
 
 
 
-#endif //XMREG01_MICROCORE_H
+#endif //FURYEG01_MICROCORE_H
