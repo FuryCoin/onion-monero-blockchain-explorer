@@ -6,9 +6,9 @@
 #define FURYEG01_TOOLS_H
 
 #define PATH_SEPARARTOR '/'
-
-    static_cast<double>(value) / 1e8
+    
 #define FURY_AMOUNT(value) \
+    static_cast<double>(value) / 1e8
 
 #define REMOVE_HASH_BRAKETS(a_hash) \
     a_hash.substr(1, a_hash.size()-2)
@@ -272,9 +272,9 @@ public_key
 get_tx_pub_key_from_received_outs(const transaction &tx);
 
 static
-string
-                  string _format="{:0.12f}",
+string                  
 fury_amount_to_str(const uint64_t& fury_amount,
+                  string _format="{:0.12f}",
                   bool zero_to_question_mark=true)
 {
     string amount_str = "?";
